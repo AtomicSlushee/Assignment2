@@ -23,9 +23,12 @@ public:
   {
     return mID;
   }
-  const std::string& component()
+  const std::string component(bool isSigned=false)
   {
-    return mComponent;
+    std::string name = mComponent;
+    if(isSigned && (mID!=REG) && (mID!=MUX2x1))
+      name = "S" + name;
+    return name;
   }
   const int nargs()
   {

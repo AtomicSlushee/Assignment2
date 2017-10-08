@@ -17,7 +17,7 @@ class Assignment
 public:
   Assignment( int count, Operator& op, Variable& result, Variable& input1, Variable& input2 = dummyvar(), Variable& input3 =
                   dummyvar() )
-      : mCount(count), mWidth(0), mLatency(0.0), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 )
+      : mCount(count), mWidth(0), mLatency(0.0), mSigned(false), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 )
   {
     // determine operator width
     mWidth = result.width();
@@ -27,12 +27,15 @@ public:
     {
       mWidth = (input1.width() > input2.width()) ? input1.width() : input2.width();
     }
+    // calculate latency through the component
     mLatency = Latencies::instance().getLatency(op,mWidth);
+    // determine whether this component should be signed
+    mSigned = input1.isSigned() || input2.isSigned() || input3.isSigned();
   }
   friend std::ostream& operator<<(std::ostream& out, Assignment& a)
   {
-    out << a.mOperator.component() << " #(.DATAWIDTH(" << a.mWidth << "))";
-    out << " inst" << a.mCount << "_" << a.mOperator.component(); 
+    out << a.mOperator.component(a.mSigned) << " #(.DATAWIDTH(" << a.mWidth << "))";
+    out << " inst" << a.mCount << "_" << a.mOperator.component(a.mSigned); 
     out << " (" << extend(a.mOperand1,a.mWidth);
     if (a.mOperator.nargs() > 1)
       out << "," << extend(a.mOperand2,a.mWidth);
@@ -78,6 +81,7 @@ private:
   int mCount;
   int mWidth;
   double mLatency;
+  bool mSigned;
   Operator& mOperator;
   Variable& mResult;
   Variable& mOperand1;
