@@ -5,6 +5,7 @@
 #include "ioclass.h"
 #include "variable.h"
 #include "operator.h"
+#include "latency.h"
 
 #include <list>
 #include <iostream>
@@ -16,27 +17,29 @@ class Assignment
 public:
   Assignment( int count, Operator& op, Variable& result, Variable& input1, Variable& input2 = dummyvar(), Variable& input3 =
                   dummyvar() )
-      : mCount(count), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 )
+      : mCount(count), mWidth(0), mLatency(0.0), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 )
   {
+    // determine operator width
+    mWidth = result.width();
+    if ((op.id() == Operator::GT) ||
+        (op.id() == Operator::LT) ||
+        (op.id() == Operator::EQ))
+    {
+      mWidth = (input1.width() > input2.width()) ? input1.width() : input2.width();
+    }
+    mLatency = Latencies::instance().getLatency(op,mWidth);
   }
   friend std::ostream& operator<<(std::ostream& out, Assignment& a)
   {
-    // determine operator width
-    int theWidth = a.mResult.width();
-    if ((a.mOperator.id() == Operator::GT) ||
-        (a.mOperator.id() == Operator::LT) ||
-        (a.mOperator.id() == Operator::EQ))
-    {
-      theWidth = (a.mOperand1.width() > a.mOperand2.width()) ? a.mOperand1.width() : a.mOperand2.width();
-    }
-    out << a.mOperator.component() << " #(.DATAWIDTH(" << theWidth << "))";
+    out << a.mOperator.component() << " #(.DATAWIDTH(" << a.mWidth << "))";
     out << " inst" << a.mCount << "_" << a.mOperator.component(); 
-    out << " (" << extend(a.mOperand1,theWidth);
+    out << " (" << extend(a.mOperand1,a.mWidth);
     if (a.mOperator.nargs() > 1)
-      out << "," << extend(a.mOperand2,theWidth);
+      out << "," << extend(a.mOperand2,a.mWidth);
     if (a.mOperator.nargs() > 2)
-      out << "," << extend(a.mOperand3,theWidth);
+      out << "," << extend(a.mOperand3,a.mWidth);
     out << "," << a.mResult.name() << ");";
+    /*DEBUG*/ out << " // latency = " << a.mLatency << " ns";
     return out;
   }
 private:
@@ -73,6 +76,8 @@ private:
   }
 private:
   int mCount;
+  int mWidth;
+  double mLatency;
   Operator& mOperator;
   Variable& mResult;
   Variable& mOperand1;
