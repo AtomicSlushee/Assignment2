@@ -14,7 +14,9 @@
 class Assignment
 {
   friend class Assignments;
+  
 public:
+  // constructor
   Assignment( int count, Operator& op, Variable& result, Variable& input1, Variable& input2 = dummyvar(), Variable& input3 =
                   dummyvar() )
       : mCount(count), mWidth(0), mLatency(0.0), mSigned(false), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 )
@@ -32,6 +34,68 @@ public:
     // determine whether this component should be signed
     mSigned = input1.isSigned() || input2.isSigned() || input3.isSigned();
   }
+  
+  // get the assignment operator
+  const Operator& getOperator()
+  {
+    return mOperator;
+  }
+  
+  // get the result variable
+  const Variable& getResult()
+  {
+    return mResult;
+  }
+  
+  // get the number of input arguments
+  const int getNumArgs()
+  {
+    return mOperator.nargs();
+  }
+  
+  // get the first input argument
+  const Variable& getInput1()
+  {
+    return mOperand1;
+  }
+  
+  // get the second input argument
+  const Variable& getInput2()
+  {
+    return mOperand2;
+  }
+  
+  // get the third input argument
+  const Variable& getInput3()
+  {
+    return mOperand3;
+  }
+  
+  // get the instantiation count
+  int getCount()
+  {
+    return mCount;
+  }
+  
+  // get the component width
+  int getWidth()
+  {
+    return mWidth;
+  }
+  
+  // get the component latency in nanoseconds
+  double getLatency()
+  {
+    return mLatency;
+  }
+  
+  // is the component signed?
+  bool isSigned()
+  {
+    return mSigned;
+  }
+  
+  // stream override to output the assignment in Verilog
   friend std::ostream& operator<<(std::ostream& out, Assignment& a)
   {
     out << a.mOperator.component(a.mSigned) << " #(.DATAWIDTH(" << a.mWidth << "))";
@@ -45,6 +109,7 @@ public:
     /*DEBUG*/ out << " // latency = " << a.mLatency << " ns";
     return out;
   }
+
 private:
   // return reference to a dummy variable to fill in unused operands
   static Variable& dummyvar()
@@ -77,6 +142,7 @@ private:
     }
     return result;
   }
+
 private:
   int mCount;
   int mWidth;
@@ -91,6 +157,9 @@ private:
 
 class Assignments
 {
+private:
+  typedef std::list< Assignment > assignments_t;
+
 public:
   static Assignments& instance()
   {
@@ -104,12 +173,16 @@ public:
     mAssignments.push_back( *pA );
     return *pA;
   }
+
+  typedef assignments_t::iterator iterator_t;
+  iterator_t begin(){return mAssignments.begin();}
+  iterator_t end(){return mAssignments.end();}
+  Assignment&  assignment(iterator_t i){return *i;}
+
 private:
   Assignments():mCount(0)
   {
   }
-
-  typedef std::list< Assignment > assignments_t;
 
   assignments_t mAssignments;
   int mCount;

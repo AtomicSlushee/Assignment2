@@ -11,45 +11,46 @@
 class Variable
 {
 public:
+  // constructor
   Variable( std::string name_, Type& type_, IOClass& ioclass_ )
       : mName( name_ ), mType( type_ ), mIOClass( ioclass_ )
   {
   }
+  
+  // get the variable name
   const std::string& name()
   {
     return mName;
   }
+  
+  // return whether the variable is signed
   bool isSigned()
   {
     return mType.isSigned();
   }
+  
+  // return the bit width of the variable
   int width()
   {
     return mType.width();
   }
+  
+  // return the variable IO class ID (see enumerations in ioclass.h)
+  IOClass::ID ioClass()
+  {
+    return mIOClass.id();
+  }
+  
+  // stream overload to output the variable declaration in Verilog
   friend std::ostream& operator<<(std::ostream& out, Variable& a)
   {
-#if 0
-    switch (a.mIOClass.mID)
-    {
-      case IOClass::INPUT:
-        break;
-      case IOClass::OUTPUT:
-        break;
-      case IOClass::WIRE:
-        break;
-      case IOClass::REGISTER:
-        break;
-      default:
-        throw;
-    }
-#endif
     out << a.mIOClass.name();
     if (a.width() > 1)
       out << " [" << a.width()-1 << ":0]";
     out << a.name() << ";";
     return out;
   }
+  
 private:
   std::string mName;
   Type& mType;
@@ -58,6 +59,10 @@ private:
 
 class Variables
 {
+private:
+  typedef std::pair< std::string, Variable > pair_t;
+  typedef std::map< std::string, Variable > variables_t;
+
 public:
   static Variables& instance()
   {
@@ -84,13 +89,15 @@ public:
     mVariables.insert( pair_t( variable, *pV) );
     return *pV;
   }
+  typedef variables_t::iterator iterator_t;
+  iterator_t begin(){return mVariables.begin();}
+  iterator_t end(){return mVariables.end();}
+  Variable&  variable(iterator_t i){return i->second;}
+  
 private:
   Variables()
   {
   }
-
-  typedef std::pair< std::string, Variable > pair_t;
-  typedef std::map< std::string, Variable > variables_t;
 
   variables_t mVariables;
 };

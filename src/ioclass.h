@@ -22,6 +22,10 @@ public:
   {
     return mName;
   }
+  ID id()
+  {
+    return mID;
+  }
 private:
   std::string mName;
   ID mID;

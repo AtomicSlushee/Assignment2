@@ -7,22 +7,32 @@
 class Operator
 {
 public:
+  // enumerations of the component types
   enum ID
   {
     REG, ADD, SUB, MUL, GT, LT, EQ, MUX2x1, SHR, SHL, DIV, MOD, INC, DEC, UNITY, SELECT
   };
+
+  // constructor
   Operator( const std::string name, ID id, const std::string comp, int nargs )
       : mName( name ), mID( id ), mComponent( comp ), mNumArgs(nargs)
   {
   }
+
+  // return the component netlist symbolic name
   const std::string& name()
   {
     return mName;
   }
+
+  // return the operator ID enumeration
   ID id()
   {
     return mID;
   }
+
+  // return the component name for the operator;
+  // uses the optional 'isSigned' flag to prepend 'S' if necessary
   const std::string component(bool isSigned=false)
   {
     std::string name = mComponent;
@@ -30,10 +40,13 @@ public:
       name = "S" + name;
     return name;
   }
+
+  // return the number of input arguments for the operator
   const int nargs()
   {
     return mNumArgs;
   }
+
 private:
   std::string mName;
   ID mID;
