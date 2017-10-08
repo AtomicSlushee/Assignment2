@@ -1,7 +1,10 @@
 #ifndef __type_h__
 #define __type_h__
 
+#include "width.h"
+
 #include <string>
+#include <sstream>
 #include <map>
 
 class Type
@@ -52,30 +55,18 @@ public:
 private:
   Types()
   {
-    static Type t_int1( "Int1",1,true );
-    static Type t_int2( "Int2",2,true );
-    static Type t_int8( "Int8",8,true );
-    static Type t_int16( "Int16",16,true );
-    static Type t_int32( "Int32",32,true );
-    static Type t_int64( "Int64",64,true );
-    static Type t_uint1( "UInt1",1,true );
-    static Type t_uint2( "UInt2",2,true );
-    static Type t_uint8( "UInt8",8,true );
-    static Type t_uint16( "UInt16",16,true );
-    static Type t_uint32( "UInt32",32,true );
-    static Type t_uint64( "UInt64",64,true );
-    mTypes.insert( pair_t( t_int1.name(),t_int1 ) );
-    mTypes.insert( pair_t( t_int2.name(),t_int2 ) );
-    mTypes.insert( pair_t( t_int8.name(),t_int8 ) );
-    mTypes.insert( pair_t( t_int16.name(),t_int16 ) );
-    mTypes.insert( pair_t( t_int32.name(),t_int32 ) );
-    mTypes.insert( pair_t( t_int64.name(),t_int64 ) );
-    mTypes.insert( pair_t( t_uint1.name(),t_uint1 ) );
-    mTypes.insert( pair_t( t_uint2.name(),t_uint2 ) );
-    mTypes.insert( pair_t( t_uint8.name(),t_uint8 ) );
-    mTypes.insert( pair_t( t_uint16.name(),t_uint16 ) );
-    mTypes.insert( pair_t( t_uint32.name(),t_uint32 ) );
-    mTypes.insert( pair_t( t_uint64.name(),t_uint64 ) );
+    static std::string Signed("Int");
+    static std::string Unsigned("Uint");
+    std::ostringstream tmp;
+    for(int i=0;i<width::count;i++)
+    {
+      tmp.str("");
+      tmp << Signed << width::set[i];
+      mTypes.insert( pair_t( tmp.str(), Type(tmp.str(),width::set[i],true)));
+      tmp.str("");
+      tmp << Unsigned << width::set[i];
+      mTypes.insert( pair_t( tmp.str(), Type(tmp.str(),width::set[i],false)));
+    }
   }
 
   typedef std::pair< std::string, Type > pair_t;

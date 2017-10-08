@@ -4,6 +4,8 @@
 #include "ioclass.h"
 #include "operator.h"
 #include "tokenizer.h"
+#include "latency.h"
+#include "assignment.h"
 
 #include <cstdio>
 #include <string>
@@ -12,8 +14,15 @@
 #include <iostream>
 #include <vector>
 
+// enable debug output
+#define DEBUGOUT if(1)
+// disable debug output
+//#define DEBUGOUT if(0)
+
 bool process( std::ifstream& in, std::ofstream& out )
 {
+  /*TODO*/ out << "// still need to handle clk/rst for REG and COMP stuff" << std::endl;
+
   std::string line;
   int lineNum = 0;
   while( std::getline( in,line ) )
@@ -36,19 +45,20 @@ bool process( std::ifstream& in, std::ofstream& out )
             std::string vtoken;
             while( tokens.next(vtoken, delimiters::csv))
             {
-              Variables::instance().addVariable(vtoken,type,ioclass);
-              out << "added variable " << vtoken << " of type " << ttoken << " with IO class " << token << std::endl;
+              Variable& var = Variables::instance().addVariable(vtoken,type,ioclass);
+              out << var << std::endl;
+              DEBUGOUT std::cout << "added variable " << vtoken << " of type " << ttoken << " with IO class " << token << std::endl;
             }
           }
           else
           {
-            printf("error: invalid data type %s on line %d\n", ttoken.c_str(), lineNum);
+            fprintf(stderr,"error: invalid data type %s on line %d\n", ttoken.c_str(), lineNum);
             return false;
           }
         }
         else
         {
-          printf("error: missing data type for IO Class %s on line %d\n", token.c_str(), lineNum );
+          fprintf(stderr,"error: missing data type for IO Class %s on line %d\n", token.c_str(), lineNum );
           return false;
         }
         tokens.kill();
@@ -56,13 +66,14 @@ bool process( std::ifstream& in, std::ofstream& out )
       // must be a variable assignment
       else
       {
-        //do { out << token; } while (tokens.next(token)); out << std::endl;
+        Assignment* a = NULL;
         if( Variables::instance().isVariable(token))
         {
+          Variable& result = Variables::instance().getVariable(token);
           std::string etoken;
           if( tokens.next(etoken) && Operators::instance().isAssignment(etoken))
           {
-            out << "assigning " << token << " equals ";
+            DEBUGOUT std::cout << "assigning " << token << " equals ";
             std::vector<std::string> args;
             while(tokens.next(etoken))
             {
@@ -72,9 +83,11 @@ bool process( std::ifstream& in, std::ofstream& out )
             {
               if (Variables::instance().isVariable(args[0]))
               {
+                Variable& input1 = Variables::instance().getVariable(args[0]);
                 if (args.size() == 1)
                 {
-                  out << "variable " << args[0] << " with REG";
+                  DEBUGOUT std::cout << "variable " << args[0] << " with REG";
+                  a = &Assignments::instance().addAssignment( Operators::instance().getOperatorByID(Operator::REG), result, input1);
                 }
                 else if( (args.size() == 3) && (Operators::instance().isOperator(args[1])))
                 {
@@ -82,19 +95,23 @@ bool process( std::ifstream& in, std::ofstream& out )
                   bool unity = Operators::instance().isUnity(args[2]);
                   if( (op.id() == Operator::ADD) && unity)
                   {
-                    out << "INC 1";
+                    DEBUGOUT std::cout << "INC 1";
+                    a = &Assignments::instance().addAssignment( Operators::instance().getOperatorByID(Operator::INC), result, input1);
                   }
                   else if ((op.id() == Operator::SUB) && unity)
                   {
-                    out << "DEC 1";
+                    DEBUGOUT std::cout << "DEC 1";
+                    a = &Assignments::instance().addAssignment( Operators::instance().getOperatorByID(Operator::DEC), result, input1);
                   }
                   else if (Variables::instance().isVariable(args[2]))
                   {
-                    out << args[0] << " " << op.component() << " " << args[2];
+                    Variable& input2 = Variables::instance().getVariable(args[2]);
+                    DEBUGOUT std::cout << args[0] << " " << op.component() << " " << args[2];
+                    a = &Assignments::instance().addAssignment( op, result, input1, input2);
                   }
                   else
                   {
-                    printf("error: malformed assignment to %s on line %d\n",token.c_str(),lineNum);
+                    fprintf(stderr,"error: malformed assignment to %s on line %d\n",token.c_str(),lineNum);
                     return false;
                   }
                 }
@@ -104,39 +121,41 @@ bool process( std::ifstream& in, std::ofstream& out )
                      Variables::instance().isVariable(args[4]) &&
                      Operators::instance().isSelect(args[3]))
                   {
-                    out << "MUX " << args[0] << " selects " << args[2] << " or " << args[4];
+                    DEBUGOUT std::cout << "MUX " << args[0] << " selects " << args[2] << " or " << args[4];
                   }
                   else
                   {
-                    printf("error: malformed mux on line %d\n",lineNum);
+                    fprintf(stderr,"error: malformed mux on line %d\n",lineNum);
                     return false;
                   }
                 }
                 else
                 {
-                  printf("error: malformed assignment on line %d\n",lineNum);
+                  fprintf(stderr,"error: malformed assignment on line %d\n",lineNum);
                   return false;
                 }
               }
               else
               {
-                printf("error: argument for assignment to %s is not a variable on line %d\n",token.c_str(),lineNum);
+                fprintf(stderr,"error: argument for assignment to %s is not a variable on line %d\n",token.c_str(),lineNum);
                 return false;
               }
             }
             else
             {
-              printf("error: assignment to %s has no arguments on line %d\n",token.c_str(),lineNum);
+              fprintf(stderr,"error: assignment to %s has no arguments on line %d\n",token.c_str(),lineNum);
               return false;
             }
-            out << std::endl;
+            DEBUGOUT std::cout << std::endl;
             tokens.kill();
           }
           else
           {
-            printf("error: no assignment operator for variable %s on line %d\n",token.c_str(),lineNum);
+            fprintf(stderr,"error: no assignment operator for variable %s on line %d\n",token.c_str(),lineNum);
             return false;
           }
+          if( a )
+            out << *a << std::endl;
         }
       }
     }
@@ -156,28 +175,28 @@ int main( int argc, char* argv[] )
       {
         if( process( inFile,outFile ) )
         {
-          printf( "converted %s to %s\n",argv[1],argv[2] );
+          fprintf(stdout, "converted %s to %s\n",argv[1],argv[2] );
         }
         else
         {
-          printf( "error while converting %s to %s\n",argv[1],argv[2] );
+          fprintf(stderr, "error while converting %s to %s\n",argv[1],argv[2] );
         }
         outFile.close();
       }
       else
       {
-        printf( "error: invalid verilog filename\n" );
+        fprintf(stderr, "error: invalid verilog filename\n" );
       }
       inFile.close();
     }
     else
     {
-      printf( "error: invalid net list filename\n" );
+      fprintf(stderr, "error: invalid net list filename\n" );
     }
   }
   else
   {
-    printf( "usage: dpgen <netListFile> <verilogFile>\n" );
+    fprintf(stdout, "usage: dpgen <netListFile> <verilogFile>\n" );
   }
 
   return 0;

@@ -3,8 +3,10 @@
 
 #include "type.h"
 #include "ioclass.h"
+
 #include <string>
 #include <map>
+#include <iostream>
 
 class Variable
 {
@@ -24,6 +26,29 @@ public:
   int width()
   {
     return mType.width();
+  }
+  friend std::ostream& operator<<(std::ostream& out, Variable& a)
+  {
+#if 0
+    switch (a.mIOClass.mID)
+    {
+      case IOClass::INPUT:
+        break;
+      case IOClass::OUTPUT:
+        break;
+      case IOClass::WIRE:
+        break;
+      case IOClass::REGISTER:
+        break;
+      default:
+        throw;
+    }
+#endif
+    out << a.mIOClass.name();
+    if (a.width() > 1)
+      out << " [" << a.width()-1 << ":0]";
+    out << a.name() << ";";
+    return out;
   }
 private:
   std::string mName;
@@ -50,12 +75,14 @@ public:
       throw;
     return i->second;
   }
-  void addVariable( std::string variable, Type& type, IOClass& ioclass )
+  Variable& addVariable( std::string variable, Type& type, IOClass& ioclass )
   {
     variables_t::iterator i = mVariables.find( variable );
     if( i != mVariables.end() )
       throw;
-    mVariables.insert( pair_t( variable,Variable( variable,type,ioclass ) ) );
+    Variable* pV = new Variable( variable,type,ioclass );
+    mVariables.insert( pair_t( variable, *pV) );
+    return *pV;
   }
 private:
   Variables()
