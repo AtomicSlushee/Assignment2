@@ -165,11 +165,17 @@ bool process( std::ifstream& in )
 bool critical()
 {
   std::list<Assignment> nodeList;
+
+  for (Assignments::iterator_t i = Assignments::instance().begin(); i != Assignments::instance().end(); i++)
+  {
+    nodeList.push_back(*i);
+  }
+
   // We have created the file and filled up a vector of nodes.
   // Now create a graph
 
   graphType<Assignment,100> graph;
-//  graph.createWeightedGraph(nodeList);
+  //graph.createWeightedGraph(nodeList);
   return true;
 }
 
