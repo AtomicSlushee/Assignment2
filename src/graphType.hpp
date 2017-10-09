@@ -3,7 +3,8 @@
 #ifndef graphType_hpp
 #define graphType_hpp
 
-#include <stdio.h>
+#include <cstdio>
+#include <list>
 #include "linkedListType.hpp"
 
 /*
@@ -47,7 +48,7 @@ public:
     
     void printGraph() const;
     
-    void createWeightedGraph(std::vector<vType> nodeList);
+    void createWeightedGraph(std::list<vType> nodeList);
     
     void Reg2RegTopologicalSort(vType vertex);
     
@@ -83,7 +84,7 @@ bool graphType<vType,size>::isEmpty() const
 }
 
 template <class vType, int size>
-void graphType<vType, size>::createWeightedGraph(std::vector<vType> nodeList)
+void graphType<vType, size>::createWeightedGraph(std::list<vType> nodeList)
 {
   
     int nodeIdx = 0;
@@ -91,7 +92,7 @@ void graphType<vType, size>::createWeightedGraph(std::vector<vType> nodeList)
     {
         clearGraph();
     }
-    typename std::vector<vType>::iterator it; // credit where credit is due
+    typename std::list<vType>::iterator it; // credit where credit is due
     // https://stackoverflow.com/questions/11275444/c-template-typename-iterator
     for (it = nodeList.begin(); it != nodeList.end(); it++)
     {
