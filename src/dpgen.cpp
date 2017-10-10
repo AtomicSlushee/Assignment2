@@ -175,7 +175,7 @@ bool critical()
   // Now create a graph
 
   graphType<Assignment,100> graph;
-  //graph.createWeightedGraph(nodeList);
+  graph.createWeightedGraph(nodeList);
   return true;
 }
 

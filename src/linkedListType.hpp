@@ -9,7 +9,7 @@
 template<class Type>
 struct nodeType
 {
-    Type info;
+    Type* info;
     nodeType<Type> *link;
 };
 
@@ -37,13 +37,13 @@ public:
     
     Type back() ;
     
-    bool search( Type searchItem) ;
+    bool search( Type& searchItem) ;
     
-    void insertFirst( Type newItem);
+    void insertFirst( Type& newItem);
     
-    void insertLast(  Type newItem);
+    void insertLast(  Type& newItem);
     
-    void deleteNode(  Type deleteItem);
+    void deleteNode(  Type& deleteItem);
     
     void getAdjacentVertices(Type adjacencyList[], int& length);
 
@@ -71,7 +71,6 @@ template<class Type>
     if (this != &otherList)
     {
         copyList(otherList);
-        
     }
     
     return *this;
@@ -149,7 +148,7 @@ Type linkedListType<Type>::back()
 }
 
 template <class Type>
-bool linkedListType<Type>::search( Type searchItem)
+bool linkedListType<Type>::search( Type& searchItem)
 {
     nodeType<Type> *current;
     bool found = false;
@@ -165,7 +164,7 @@ bool linkedListType<Type>::search( Type searchItem)
     return found;
 }
 template <class Type>
-void linkedListType<Type>::insertFirst(  Type newItem)
+void linkedListType<Type>::insertFirst(  Type& newItem)
 {
     nodeType<Type> *newNode;
     
@@ -173,7 +172,7 @@ void linkedListType<Type>::insertFirst(  Type newItem)
     
     assert(newNode != NULL);
     
-    newNode->info = newItem;
+    newNode->info = &newItem;
     newNode->link = first;
     first = newNode;
     
@@ -185,7 +184,7 @@ void linkedListType<Type>::insertFirst(  Type newItem)
 }
 
 template<class Type>
-void linkedListType<Type>::insertLast( Type newItem)
+void linkedListType<Type>::insertLast( Type& newItem)
 {
     nodeType<Type> *newNode;
     
@@ -193,7 +192,7 @@ void linkedListType<Type>::insertLast( Type newItem)
     
     assert(newNode != NULL);
     
-    newNode->info = newItem;
+    newNode->info = &newItem;
     newNode->link = NULL;
     
     if (first == NULL)
@@ -211,7 +210,7 @@ void linkedListType<Type>::insertLast( Type newItem)
     
 }
 template<class Type>
-void linkedListType<Type>::deleteNode( Type deleteItem)
+void linkedListType<Type>::deleteNode( Type& deleteItem)
 {
     nodeType<Type> *current;
     nodeType<Type> *trailCurrent;
