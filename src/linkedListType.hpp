@@ -134,8 +134,8 @@ int linkedListType<Type>::length()
 template <class Type>
 Type linkedListType<Type>::front() 
 {
-    assert(last != NULL);
-    return first->info;
+    assert(first != NULL);
+    return *first->info;
     
 }
 
@@ -143,7 +143,7 @@ template <class Type>
 Type linkedListType<Type>::back() 
 {
     assert(last != NULL);
-    return last->info;
+    return *last->info;
     
 }
 
@@ -156,7 +156,7 @@ bool linkedListType<Type>::search( Type& searchItem)
     current = first;
     
     while (current != NULL && !found)
-        if (current->info == searchItem.info)
+        if (current->info == searchItem->info)
             found = true;
         else
             current = current->link;
@@ -351,33 +351,6 @@ void linkedListType<Type>::getAdjacentVertices(Type adjacencyList[], int &length
         current = current->link;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #endif /* linkedListType_hpp */

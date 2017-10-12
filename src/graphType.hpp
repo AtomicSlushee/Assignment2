@@ -7,13 +7,8 @@
 #include <list>
 #include "linkedListType.hpp"
 
-/*
- From the .cpp file
- #include "graphType.hpp"
- #include <iostream>
- #include <fstream>
- #include <vector>
- */
+#include "assignment.h" // couldn't template all of it
+
 template<class vType>
 class linkedListGraph: public linkedListType<vType>
 {
@@ -48,7 +43,7 @@ public:
     
     void printGraph() const;
     
-    void createWeightedGraph(std::list<vType> nodeList);
+    void createWeightedGraph(std::list<Assignment> nodeList); // can't template this one
     
     void Reg2RegTopologicalSort(vType vertex);
     
@@ -68,14 +63,11 @@ protected:
     int maxSize;
     int gSize;
     double weights[size][size];
-    double smallestWeight[size];
+    // TODO edge weights?
     linkedListGraph<vType> graph[size];
-
     
 };
 
-
-//
 template <class vType, int size>
 bool graphType<vType,size>::isEmpty() const
 {
@@ -84,78 +76,66 @@ bool graphType<vType,size>::isEmpty() const
 }
 
 template <class vType, int size>
-void graphType<vType, size>::createWeightedGraph(std::list<vType> nodeList)
+void graphType<vType, size>::createWeightedGraph(std::list<Assignment> nodeList)
 {
   
-    int nodeIdx = 0;
+    int nodeIdx = 0; // for adding nodes to the graph
     if (gSize != 0)
     {
         clearGraph();
     }
-    typename std::list<vType>::iterator it; // credit where credit is due
-    // https://stackoverflow.com/questions/11275444/c-template-typename-iterator
-    for (it = nodeList.begin(); it != nodeList.end(); it++)
+    for (Assignments::iterator_t i = Assignments::instance().begin(); i != Assignments::instance().end(); i++)
     {
-        //vType vertex = it;
-        graph[nodeIdx].initializeList();
-        graph[nodeIdx].insertLast(*it);
+        // each assignment is a new node
+        // TODO what if this isn't true? for example
+        // t1 = a + b
+        // t1 = b + c
+        // ^ this shouldn't happen in verilog unless something like a blocking assignment is used.
+        // also, wtf would this happen?
+        // For now assume only non-blocking assignments.
+        
+        graph[nodeIdx].initializeList(); // clears it out for this node
+        
+        graph[nodeIdx].insertLast(Assignments::instance().assignment(i)); // adds node to the graph
+        
+        // Now, check to see how this node connects to the existing nodes (if any)
+        for (int tempNodeIdx = 0; tempNodeIdx < nodeList.size(); tempNodeIdx++)
+        {
+            // check every node in the list to see if any of the outputs match our current inputs
+            // this is a simple way to check for dependencies... perhaps too simple?
+
+            // Todo: if the input to current node are outputs of other nodes then add current node
+            //       to list of other nodes
+            if ( graph[tempNodeIdx].length() > 0 &&
+                (Assignments::instance().assignment(i).getInput1().name() == graph[tempNodeIdx].front().getResult().name()  ||
+                Assignments::instance().assignment(i).getInput2().name() == graph[tempNodeIdx].front().getResult().name() ||
+                Assignments::instance().assignment(i).getInput3().name() == graph[tempNodeIdx].front().getResult().name() ))
+            {
+                std::cout << " Node " << nodeIdx << " depends on Node " << tempNodeIdx << std::endl;
+                graph[tempNodeIdx].insertLast(Assignments::instance().assignment(i));
+                 // todo missing some nodes?
+                // todo update the weight
+                 weights[nodeIdx][tempNodeIdx] = Assignments::instance().assignment(i).getLatency() + graph[tempNodeIdx].front().getLatency();
+                weights[tempNodeIdx][nodeIdx] = weights[nodeIdx][tempNodeIdx]; // symmetric matrix? eh it'll do for now
+            }
+            else if (nodeIdx == tempNodeIdx)
+            {
+                weights[nodeIdx][tempNodeIdx] = 0; // distance to itself is zero   
+            }
+            else
+            {
+                
+                weights[nodeIdx][tempNodeIdx] = infinity; // no connection infinite weight
+            }
+            
+        }
+        
+        
+        nodeIdx++;
+        //
     }
-//    for (index = 0; index < gSize; index++)
-//    { // read in the coordinates from the file and place nodes in graph
-//        node *vertex = new node;
-//        vertex->info = index;
-//        
-//        m_graph[index].initializeList();
-//        m_graph[index].insertLast(*vertex);
-//        
-//        
-//    }
-//
-//    for (index = 0; index < gSize; index++)
-//    {
-//        float tempX = m_graph[index].first->x;
-//        float tempY = m_graph[index].first->y;
-//        float distance = 0;
-//        // for each node check for which nodes are in range using pythagorean theorem.
-//        for (int otherNodeIdx = 0; otherNodeIdx < gSize; otherNodeIdx++)
-//        {
-//            distance = sqrt(pow(m_graph[otherNodeIdx].first->x - tempX,2) + pow(m_graph[otherNodeIdx].first->y - tempY,2));
-//            if (distance < 20.000 && otherNodeIdx != index)
-//            {
-//                
-//                if (distance < 1)
-//                    distance  = 1; // per instruction sheet
-//                
-//                // in range, so add node
-//                // but not the same node. Just one that has same first layer.
-//                
-//                // IF shortest path starts breaking, check to see if it's the fact that the nodes are not really connected. It's only useful for printing.
-//                node *tempNode = new node;
-//                tempNode->info = m_graph[otherNodeIdx].first->info;
-//                tempNode->link = NULL;
-//                tempNode->x = m_graph[otherNodeIdx].first->x;
-//                tempNode->y = m_graph[otherNodeIdx].first->y;
-//                tempNode->power = pow(distance,2);
-//                //                m_graph[index].insertLast(*m_graph[otherNodeIdx].first);
-//                m_graph[index].insertLast(*tempNode);
-//                weights[index][otherNodeIdx] =  pow(distance,2);
-//                
-//            }
-//            else if (index == otherNodeIdx)
-//            {
-//                weights[index][otherNodeIdx] = 0;
-//            }
-//            else
-//            {
-//                weights[index][otherNodeIdx] = infinity;
-//            }
-//        }
-//        
-//    }
-//    
-//    
-//    
-//    infile.close();
+
+
 }
 
 template <class vType, int size>
@@ -272,6 +252,13 @@ graphType<vType, size>::graphType()
 {
     maxSize = size;
     gSize = 0;
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            weights[i][j] = infinity;
+        }
+    }
 }
 template <class vType, int size>
 graphType<vType,size>::~graphType()

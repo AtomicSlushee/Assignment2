@@ -18,7 +18,7 @@ public:
   }
   
   // get the variable name
-  const std::string& name()
+   std::string& name()
   {
     return mName;
   }

@@ -42,7 +42,7 @@ public:
   }
   
   // get the result variable
-  const Variable& getResult()
+   Variable& getResult()
   {
     return mResult;
   }
@@ -54,19 +54,19 @@ public:
   }
   
   // get the first input argument
-  const Variable& getInput1()
+   Variable& getInput1()
   {
     return mOperand1;
   }
   
   // get the second input argument
-  const Variable& getInput2()
+   Variable& getInput2()
   {
     return mOperand2;
   }
   
   // get the third input argument
-  const Variable& getInput3()
+   Variable& getInput3()
   {
     return mOperand3;
   }
