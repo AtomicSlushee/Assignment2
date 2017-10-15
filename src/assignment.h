@@ -175,9 +175,11 @@ public:
   }
 
   typedef assignments_t::iterator iterator_t;
-  iterator_t begin(){return mAssignments.begin();}
-  iterator_t end(){return mAssignments.end();}
-  Assignment&  assignment(iterator_t i){return *i;}
+  iterator_t begin() { return mAssignments.begin(); }
+  iterator_t end() { return mAssignments.end(); }
+  size_t size() { return mAssignments.size(); }
+  Assignment& assignment(iterator_t i) { return *i; }
+  Assignment& operator[](iterator_t i) { return *i; }
 
 private:
   Assignments():mCount(0)

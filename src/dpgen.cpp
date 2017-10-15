@@ -173,7 +173,7 @@ bool critical()
 
   // We have created the file and filled up a vector of nodes.
   // Now create a graph
-  graphType<Assignment,10> graph; // todo: 100 should be enough but this should really be dynamic, but it looks like templating prohibits this
+  graphType<Assignment, 10> graph;
   graph.createWeightedGraph(nodeList);
   return true;
 }

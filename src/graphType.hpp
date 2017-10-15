@@ -78,13 +78,16 @@ bool graphType<vType,size>::isEmpty() const
 template <class vType, int size>
 void graphType<vType, size>::createWeightedGraph(std::list<Assignment> nodeList)
 {
-  
+    Assignments unsortedAssignments = Assignments::instance();
+
     int nodeIdx = 0; // for adding nodes to the graph
+
     if (gSize != 0)
     {
         clearGraph();
     }
-    for (Assignments::iterator_t i = Assignments::instance().begin(); i != Assignments::instance().end(); i++)
+ 
+    for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++)
     {
         // each assignment is a new node
         // TODO what if this isn't true? for example
@@ -96,7 +99,7 @@ void graphType<vType, size>::createWeightedGraph(std::list<Assignment> nodeList)
         
         graph[nodeIdx].initializeList(); // clears it out for this node
         
-        graph[nodeIdx].insertLast(Assignments::instance().assignment(i)); // adds node to the graph
+        graph[nodeIdx].insertLast(unsortedAssignments[i]); // adds node to the graph
         
         // Now, check to see how this node connects to the existing nodes (if any)
         for (int tempNodeIdx = 0; tempNodeIdx < nodeList.size(); tempNodeIdx++)
@@ -107,15 +110,45 @@ void graphType<vType, size>::createWeightedGraph(std::list<Assignment> nodeList)
             // Todo: if the input to current node are outputs of other nodes then add current node
             //       to list of other nodes
             if ( graph[tempNodeIdx].length() > 0 &&
-                (Assignments::instance().assignment(i).getInput1().name() == graph[tempNodeIdx].front().getResult().name()  ||
-                Assignments::instance().assignment(i).getInput2().name() == graph[tempNodeIdx].front().getResult().name() ||
-                Assignments::instance().assignment(i).getInput3().name() == graph[tempNodeIdx].front().getResult().name() ))
+                (unsortedAssignments[i].getInput1().name() == graph[tempNodeIdx].front().getResult().name()  ||
+                 unsortedAssignments[i].getInput2().name() == graph[tempNodeIdx].front().getResult().name() ||
+                 unsortedAssignments[i].getInput3().name() == graph[tempNodeIdx].front().getResult().name() ))
             {
-                std::cout << " Node " << nodeIdx << " depends on Node " << tempNodeIdx << std::endl;
-                graph[tempNodeIdx].insertLast(Assignments::instance().assignment(i));
-                 // todo missing some nodes?
+                std::cout << " Node " << nodeIdx << ":" << std::endl;
+                //std::cout << "       OpName: " << unsortedAssignments[i].getOperator().name() << std::endl;
+                std::cout << "       Input1: " << unsortedAssignments[i].getInput1().name() << std::endl;
+                std::cout << "       Input2: " << unsortedAssignments[i].getInput2().name() << std::endl;
+                std::cout << "       Input3: " << unsortedAssignments[i].getInput3().name() << std::endl;
+                std::cout << "       Output: " << unsortedAssignments[i].getResult().name() << std::endl;
+                std::cout << "       Depends on: Node " << tempNodeIdx << std::endl;
+                std::cout << std::endl;
+
+                graph[tempNodeIdx].insertLast(unsortedAssignments[i]);
+                
+                // todo missing some nodes?
                 // todo update the weight
-                 weights[nodeIdx][tempNodeIdx] = Assignments::instance().assignment(i).getLatency() + graph[tempNodeIdx].front().getLatency();
+                
+                weights[nodeIdx][tempNodeIdx] = unsortedAssignments[i].getLatency() + graph[tempNodeIdx].front().getLatency();
+                weights[tempNodeIdx][nodeIdx] = weights[nodeIdx][tempNodeIdx]; // symmetric matrix? eh it'll do for now
+            }
+            else if ( unsortedAssignments[i].getInput1().ioClass() == IOClass::INPUT &&
+                      unsortedAssignments[i].getInput2().ioClass() == IOClass::INPUT &&
+                      unsortedAssignments[i].getInput3().ioClass() == IOClass::INPUT )
+            {
+                // Find all assignments with no dependencies and put them in list
+                // NOTE: Dummy variables are given a default ioClass of INPUT
+
+                std::cout << " Node " << nodeIdx << ":" << std::endl;
+                std::cout << "       Input1: " << unsortedAssignments[i].getInput1().name() << std::endl;
+                std::cout << "       Input2: " << unsortedAssignments[i].getInput2().name() << std::endl;
+                std::cout << "       Input3: " << unsortedAssignments[i].getInput3().name() << std::endl;
+                std::cout << "       Output: " << unsortedAssignments[i].getResult().name() << std::endl;
+                std::cout << "       Depends on: No one." << std::endl;
+                std::cout << std::endl;
+ 
+                graph[tempNodeIdx].insertFirst(unsortedAssignments[i]);
+                
+                weights[nodeIdx][tempNodeIdx] = unsortedAssignments[i].getLatency();
                 weights[tempNodeIdx][nodeIdx] = weights[nodeIdx][tempNodeIdx]; // symmetric matrix? eh it'll do for now
             }
             else if (nodeIdx == tempNodeIdx)

@@ -14,13 +14,13 @@ public:
   };
 
   // constructor
-  Operator( const std::string name, ID id, const std::string comp, int nargs )
+  Operator( std::string name, ID id, const std::string comp, int nargs )
       : mName( name ), mID( id ), mComponent( comp ), mNumArgs(nargs)
   {
   }
 
   // return the component netlist symbolic name
-  const std::string& name()
+  std::string& name()
   {
     return mName;
   }
