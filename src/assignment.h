@@ -101,10 +101,18 @@ public:
     out << a.mOperator.component(a.mSigned) << " #(.DATAWIDTH(" << a.mWidth << "))";
     out << " inst" << a.mCount << "_" << a.mOperator.component(a.mSigned); 
     out << " (" << extend(a.mOperand1,a.mWidth);
-    if (a.mOperator.nargs() > 1)
-      out << "," << extend(a.mOperand2,a.mWidth);
-    if (a.mOperator.nargs() > 2)
-      out << "," << extend(a.mOperand3,a.mWidth);
+    if (a.mOperator.id() == Operator::REG)
+    {
+      out << "," << a.mOperand2.name();
+      out << "," << a.mOperand3.name();
+    }
+    else
+    {
+      if (a.mOperator.nargs() > 1)
+        out << "," << extend(a.mOperand2,a.mWidth);
+      if (a.mOperator.nargs() > 2)
+        out << "," << extend(a.mOperand3,a.mWidth);
+    }
     out << "," << a.mResult.name() << ");";
     /*DEBUG*/ out << " // latency = " << a.mLatency << " ns";
     return out;

@@ -115,7 +115,7 @@ public:
 private:
   Operators()
   {
-    static Operator t_reg( "=",Operator::REG,"REG",1 );
+    static Operator t_reg( "=",Operator::REG,"REG",3 );
     static Operator t_add( "+",Operator::ADD,"ADD",2 );
     static Operator t_sub( "-",Operator::SUB,"SUB",2 );
     static Operator t_mul( "*",Operator::MUL,"MUL",2 );

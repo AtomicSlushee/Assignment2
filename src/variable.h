@@ -47,7 +47,7 @@ public:
     out << a.mIOClass.name();
     if (a.width() > 1)
       out << " [" << a.width()-1 << ":0]";
-    out << a.name() << ";";
+    out << " " << a.name() << ";";
     return out;
   }
   
@@ -88,6 +88,14 @@ public:
     Variable* pV = new Variable( variable,type,ioclass );
     mVariables.insert( pair_t( variable, *pV) );
     return *pV;
+  }
+  Variable& addVariable( Variable& variable )
+  {
+    variables_t::iterator i = mVariables.find( variable.name() );
+    if( i != mVariables.end() )
+      throw;
+    mVariables.insert( pair_t( variable.name(), variable) );
+    return variable;
   }
   typedef variables_t::iterator iterator_t;
   iterator_t begin(){return mVariables.begin();}

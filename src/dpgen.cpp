@@ -19,10 +19,23 @@
 // disable debug output
 //#define DEBUGOUT if(0)
 
+static const char* indent = "    ";
+
+// define the clock and reset, just in case we need them
+namespace builtIn
+{
+  Variable clock(std::string("clk"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
+  Variable reset(std::string("rst"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
+}
+
+
 bool process( std::ifstream& in )
 {
+  bool addedClkRst = false;
   std::string line;
   int lineNum = 0;
+
+  // for all lines in the circuit file
   while( std::getline( in,line ) )
   {
     lineNum++;
@@ -87,7 +100,14 @@ bool process( std::ifstream& in )
                 if (args.size() == 1)
                 {
                   DEBUGOUT std::cout << "variable " << args[0] << " with REG";
-                  Assignments::instance().addAssignment( Operators::instance().getOperatorByID(Operator::REG), result, input1);
+                  if (!addedClkRst)
+                  {
+                    Variables::instance().addVariable( builtIn::clock );
+                    Variables::instance().addVariable( builtIn::reset );
+                    addedClkRst = true;
+                  }
+                  Assignments::instance().addAssignment( Operators::instance().getOperatorByID( Operator::REG ),
+                                                         result, input1, builtIn::clock, builtIn::reset );
                 }
                 else if( (args.size() == 3) && (Operators::instance().isOperator(args[1])))
                 {
@@ -180,15 +200,21 @@ bool critical()
 
 bool verilog( std::ofstream& out )
 {
-  /*TODO*/ out << "// still need to handle clk/rst for REG and COMP stuff" << std::endl;
-  /*TODO*/ out << "// also need to handle the module wrapper and such" << std::endl;
+  /*TODO*/ out << "// still need to handle COMP arguments" << std::endl;
+  /*TODO*/ out << "// also need to handle the module name and arguments" << std::endl;
 
   bool success = true;
+
+  // timescale
+  out << "'timescale 1ns / 1ps" << std::endl;
+
+  // declare module
+  out << "module TODO(TODO);" << std::endl;
 
   // output the variable declarations
   for (Variables::iterator_t i = Variables::instance().begin(); i != Variables::instance().end(); i++)
   {
-    out << Variables::instance().variable(i) << std::endl;
+    out << indent << Variables::instance().variable(i) << std::endl;
   }
 
   out << std::endl;
@@ -196,8 +222,11 @@ bool verilog( std::ofstream& out )
   // output the assignments
   for (Assignments::iterator_t i = Assignments::instance().begin(); i != Assignments::instance().end(); i++)
   {
-    out << Assignments::instance().assignment(i) << std::endl;
+    out << indent << Assignments::instance().assignment(i) << std::endl;
   }
+
+  // end the module
+  out << "endmodule" << std::endl;
 
   return success;
 }
