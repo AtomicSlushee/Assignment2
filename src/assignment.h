@@ -17,9 +17,10 @@ class Assignment
   
 public:
   // constructor
-  Assignment( int count, Operator& op, Variable& result, Variable& input1, Variable& input2 = dummyvar(), Variable& input3 =
-                  dummyvar() )
-      : mCount(count), mWidth(0), mLatency(0.0), mSigned(false), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 )
+  Assignment( int count, Operator& op, Variable& result, Variable& input1, Variable& input2 = dummyvar(),
+              Variable& input3 = dummyvar(), Variable& other1 = dummyvar(), Variable& other2 = dummyvar() )
+      : mCount(count), mWidth(0), mLatency(0.0), mSigned(false), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 ),
+        mOther1( other1 ), mOther2( other2 )
   {
     // determine operator width
     mWidth = result.width();
@@ -54,19 +55,19 @@ public:
   }
   
   // get the first input argument
-   Variable& getInput1()
+  Variable& getInput1()
   {
     return mOperand1;
   }
   
   // get the second input argument
-   Variable& getInput2()
+  Variable& getInput2()
   {
     return mOperand2;
   }
   
   // get the third input argument
-   Variable& getInput3()
+  Variable& getInput3()
   {
     return mOperand3;
   }
@@ -101,24 +102,43 @@ public:
     out << a.mOperator.component(a.mSigned) << " #(.DATAWIDTH(" << a.mWidth << "))";
     out << " inst" << a.mCount << "_" << a.mOperator.component(a.mSigned); 
     out << " (" << extend(a.mOperand1,a.mWidth);
-    if (a.mOperator.id() == Operator::REG)
+    switch( a.mOperator.id() )
     {
-      out << "," << a.mOperand2.name();
-      out << "," << a.mOperand3.name();
-    }
-    else
-    {
-      if (a.mOperator.nargs() > 1)
+      case Operator::REG:
+        out << "," << a.mOther1.name();
+        out << "," << a.mOther2.name();
+        out << "," << a.mResult.name() << ");";
+        break;
+      case Operator::GT:
         out << "," << extend(a.mOperand2,a.mWidth);
-      if (a.mOperator.nargs() > 2)
-        out << "," << extend(a.mOperand3,a.mWidth);
+        out << "," << a.mResult.name();
+        out << "," << a.mOther1.name();
+        out << "," << a.mOther2.name() << ");";
+        break;
+      case Operator::LT:
+        out << "," << extend(a.mOperand2,a.mWidth);
+        out << "," << a.mOther1.name();
+        out << "," << a.mResult.name();
+        out << "," << a.mOther2.name() << ");";
+        break;
+      case Operator::EQ:
+        out << "," << extend(a.mOperand2,a.mWidth);
+        out << "," << a.mOther1.name();
+        out << "," << a.mOther2.name();
+        out << "," << a.mResult.name() << ");";
+        break;
+      default:
+        {
+          if (a.mOperator.nargs() > 1)
+            out << "," << extend(a.mOperand2,a.mWidth);
+          if (a.mOperator.nargs() > 2)
+            out << "," << extend(a.mOperand3,a.mWidth);
+          out << "," << a.mResult.name() << ");";
+        }
     }
-    out << "," << a.mResult.name() << ");";
     /*DEBUG*/ out << " // latency = " << a.mLatency << " ns";
     return out;
   }
-
-private:
   // return reference to a dummy variable to fill in unused operands
   static Variable& dummyvar()
   {
@@ -127,6 +147,8 @@ private:
     static Variable dummyvar( "dummy",dummytype,dummyio );
     return dummyvar;
   }
+
+private:
   // create, if necessary, a width-extended input
   static std::string extend(Variable& var, int width)
   {
@@ -161,6 +183,8 @@ private:
   Variable& mOperand1;
   Variable& mOperand2;
   Variable& mOperand3;
+  Variable& mOther1;
+  Variable& mOther2;
 };
 
 class Assignments
@@ -175,9 +199,11 @@ public:
     return assignments;
   }
   Assignment& addAssignment( Operator& op, Variable& output, Variable& input1, Variable& input2 = Assignment::dummyvar(),
-                      Variable& input3 = Assignment::dummyvar() )
+                      Variable& input3 = Assignment::dummyvar(),
+                      Variable& other1 = Assignment::dummyvar(),
+                      Variable& other2 = Assignment::dummyvar())
   {
-    Assignment* pA = new Assignment( mCount++,op,output,input1,input2,input3 );
+    Assignment* pA = new Assignment( mCount++,op,output,input1,input2,input3,other1,other2 );
     mAssignments.push_back( *pA );
     return *pA;
   }

@@ -24,14 +24,17 @@ static const char* indent = "    ";
 // define the clock and reset, just in case we need them
 namespace builtIn
 {
-  Variable clock(std::string("clk"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
-  Variable reset(std::string("rst"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
+  Variable clock(std::string("__clk"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
+  Variable reset(std::string("__rst"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
+  Variable dummy1(std::string("__na1"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("wire"));
+  Variable dummy2(std::string("__na2"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("wire"));
 }
 
 
 bool process( std::ifstream& in )
 {
   bool addedClkRst = false;
+  bool addedDummies = false;
   std::string line;
   int lineNum = 0;
 
@@ -107,7 +110,8 @@ bool process( std::ifstream& in )
                     addedClkRst = true;
                   }
                   Assignments::instance().addAssignment( Operators::instance().getOperatorByID( Operator::REG ),
-                                                         result, input1, builtIn::clock, builtIn::reset );
+                                                         result, input1, Assignment::dummyvar(), Assignment::dummyvar(),
+                                                         builtIn::clock, builtIn::reset );
                 }
                 else if( (args.size() == 3) && (Operators::instance().isOperator(args[1])))
                 {
@@ -127,7 +131,23 @@ bool process( std::ifstream& in )
                   {
                     Variable& input2 = Variables::instance().getVariable(args[2]);
                     DEBUGOUT std::cout << args[0] << " " << op.component() << " " << args[2];
-                    Assignments::instance().addAssignment( op, result, input1, input2);
+                    if( (op.id() == Operator::GT ) ||
+                        (op.id() == Operator::LT ) ||
+                        (op.id() == Operator::EQ ))
+                    {
+                      if( !addedDummies )
+                      {
+                        Variables::instance().addVariable( builtIn::dummy1 );
+                        Variables::instance().addVariable( builtIn::dummy2 );
+                        addedDummies = true;
+                      }
+                      Assignments::instance().addAssignment( op, result, input1, input2, Assignment::dummyvar(),
+                                                             builtIn::dummy1, builtIn::dummy2);
+                    }
+                    else
+                    {
+                      Assignments::instance().addAssignment( op, result, input1, input2);
+                    }
                   }
                   else
                   {
@@ -200,16 +220,37 @@ bool critical()
 
 bool verilog( std::ofstream& out )
 {
-  /*TODO*/ out << "// still need to handle COMP arguments" << std::endl;
-  /*TODO*/ out << "// also need to handle the module name and arguments" << std::endl;
+  /*TODO*/ out << "// need to handle the module name" << std::endl;
 
   bool success = true;
+  bool comma = false;
 
   // timescale
   out << "'timescale 1ns / 1ps" << std::endl;
 
   // declare module
-  out << "module TODO(TODO);" << std::endl;
+  out << "module TODO(";
+  for (Variables::iterator_t i = Variables::instance().begin(); i != Variables::instance().end(); i++)
+  {
+    if( Variables::instance().variable(i).ioClass() == IOClass::INPUT )
+    {
+      if( comma )
+        out << ",";
+      out << Variables::instance().variable(i).name();
+      comma = true;
+    }
+  }
+  for (Variables::iterator_t i = Variables::instance().begin(); i != Variables::instance().end(); i++)
+  {
+    if( Variables::instance().variable(i).ioClass() == IOClass::OUTPUT )
+    {
+      if( comma )
+        out << ",";
+      out << Variables::instance().variable(i).name();
+      comma = true;
+    }
+  }
+  out << ");" << std::endl;
 
   // output the variable declarations
   for (Variables::iterator_t i = Variables::instance().begin(); i != Variables::instance().end(); i++)
