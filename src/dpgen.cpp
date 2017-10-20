@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <libgen.h>
 
 // enable debug output
 #define DEBUGOUT if(1)
@@ -221,10 +222,8 @@ bool critical()
   return true;
 }
 
-bool verilog( std::ofstream& out )
+bool verilog( std::ofstream& out, std::string name )
 {
-  /*TODO*/ out << "// need to handle the module name" << std::endl;
-
   bool success = true;
   bool comma = false;
 
@@ -232,7 +231,7 @@ bool verilog( std::ofstream& out )
   out << "'timescale 1ns / 1ps" << std::endl;
 
   // declare module
-  out << "module TODO(";
+  out << "module " << name << "(";
   for (Variables::iterator_t i = Variables::instance().begin(); i != Variables::instance().end(); i++)
   {
     if( Variables::instance().variable(i).ioClass() == IOClass::INPUT )
@@ -275,6 +274,15 @@ bool verilog( std::ofstream& out )
   return success;
 }
 
+std::string moduleName(char* argv)
+{
+  std::string name(basename(argv));
+  size_t pos = name.find_last_of('.');
+  if (std::string::npos != pos)
+    name.erase(pos,std::string::npos);
+  return name;
+}
+
 int main( int argc, char* argv[] )
 {
   if( argc > 2 )
@@ -289,7 +297,7 @@ int main( int argc, char* argv[] )
         {
           if( critical() )
           {
-            if( verilog( outFile ))
+            if( verilog( outFile, moduleName(argv[1])))
             {
               fprintf(stdout, "converted %s to %s\n",argv[1],argv[2] );
             }
