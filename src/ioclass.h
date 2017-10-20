@@ -9,6 +9,7 @@ class IOClass
 public:
   enum ID
   {
+    DUMMY=-1,
     INPUT,
     OUTPUT,
     WIRE,

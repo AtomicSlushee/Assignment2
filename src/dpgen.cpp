@@ -162,6 +162,9 @@ bool process( std::ifstream& in )
                      Operators::instance().isSelect(args[3]))
                   {
                     DEBUGOUT std::cout << "MUX " << args[0] << " selects " << args[2] << " or " << args[4];
+                    Assignments::instance().addAssignment( Operators::instance().getOperatorByID( Operator::MUX2x1 ),
+                                                           result,Variables::instance().getVariable( args[2] ),
+                                                           Variables::instance().getVariable( args[4] ) );
                   }
                   else
                   {
@@ -213,7 +216,7 @@ bool critical()
 
   // We have created the file and filled up a vector of nodes.
   // Now create a graph
-  graphType<Assignment, 10> graph;
+  graphType<Assignment, 100> graph;
   graph.createWeightedGraph(nodeList);
   return true;
 }

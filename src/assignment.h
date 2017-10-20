@@ -143,7 +143,7 @@ public:
   static Variable& dummyvar()
   {
     static Type dummytype( "dummy",1,false );
-    static IOClass dummyio( "dummy",IOClass::INPUT );
+    static IOClass dummyio( "dummy",IOClass::DUMMY );
     static Variable dummyvar( "dummy",dummytype,dummyio );
     return dummyvar;
   }

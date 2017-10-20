@@ -86,7 +86,14 @@ void graphType<vType, size>::createWeightedGraph(std::list<Assignment> nodeList)
     {
         clearGraph();
     }
- 
+
+    // DEBUG ONLY -- DISPLAY THE NODES FOR REFERENCE
+    int n=0;
+    for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++,n++)
+    {
+      std::cout << "Node " << n << ": " << *i << std::endl;
+    }
+
     for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++)
     {
         // each assignment is a new node
