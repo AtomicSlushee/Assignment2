@@ -152,7 +152,7 @@ bool process( std::ifstream& in )
                   }
                   else
                   {
-                    fprintf(stderr,"error: malformed assignment to %s on line %d\n",token.c_str(),lineNum);
+                    fprintf(stderr,"error: unknown variable %s on line %d\n",args[2].c_str(),lineNum);
                     return false;
                   }
                 }
@@ -198,6 +198,11 @@ bool process( std::ifstream& in )
             fprintf(stderr,"error: no assignment operator for variable %s on line %d\n",token.c_str(),lineNum);
             return false;
           }
+        }
+        else
+        {
+          fprintf(stderr,"error: undefined variable %s on line %d\n",token.c_str(),lineNum);
+          return false;
         }
       }
     }
