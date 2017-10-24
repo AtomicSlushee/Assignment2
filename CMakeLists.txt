@@ -11,6 +11,7 @@ endif()
 
 # start of project
 project( dpgen )
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+#uncomment next line to place executable in root, not src
+#SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 add_subdirectory( src )
 
