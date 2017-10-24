@@ -56,7 +56,7 @@ private:
   Types()
   {
     static std::string Signed("Int");
-    static std::string Unsigned("Uint");
+    static std::string Unsigned("UInt");
     std::ostringstream tmp;
     for(int i=0;i<width::count;i++)
     {

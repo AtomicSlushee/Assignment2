@@ -25,10 +25,10 @@ static const char* indent = "    ";
 // define the clock and reset, just in case we need them
 namespace builtIn
 {
-  Variable clock(std::string("__clk"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
-  Variable reset(std::string("__rst"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("input"));
-  Variable dummy1(std::string("__na1"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("wire"));
-  Variable dummy2(std::string("__na2"),Types::instance().getType("Uint1"),IOClasses::instance().getIOClass("wire"));
+  Variable clock(std::string("__clk"),Types::instance().getType("UInt1"),IOClasses::instance().getIOClass("input"));
+  Variable reset(std::string("__rst"),Types::instance().getType("UInt1"),IOClasses::instance().getIOClass("input"));
+  Variable dummy1(std::string("__na1"),Types::instance().getType("UInt1"),IOClasses::instance().getIOClass("wire"));
+  Variable dummy2(std::string("__na2"),Types::instance().getType("UInt1"),IOClasses::instance().getIOClass("wire"));
 }
 
 
