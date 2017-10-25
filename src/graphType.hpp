@@ -37,11 +37,11 @@ class graphType
 {
     
 public:
-    bool isEmpty() const;
+    bool isEmpty();
     
     void clearGraph();
     
-    void printGraph() const;
+    void printGraph();
     
     void createWeightedGraph(std::list<Assignment> nodeList); // can't template this one
     
@@ -69,7 +69,7 @@ protected:
 };
 
 template <class vType, int size>
-bool graphType<vType,size>::isEmpty() const
+bool graphType<vType,size>::isEmpty()
 {
     return(gSize == 0);
     
@@ -190,14 +190,14 @@ void graphType<vType,size>::clearGraph()
 }
 
 template <class vType, int size>
-void graphType<vType, size>::printGraph() const
+void graphType<vType, size>::printGraph() 
 {
     int index;
     
-    for (index = 0; index < gSize; index++)
+    for (index = 0; index < size; index++)
     {
         std::cout << index << " ";
-        this->m_graph[index].print();
+        this->graph[index].print();
         std::cout << std::endl;
     }
     
