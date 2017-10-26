@@ -164,7 +164,9 @@ bool process( std::ifstream& in )
                   {
                     DEBUGOUT std::cout << "MUX " << args[0] << " selects " << args[2] << " or " << args[4];
                     Assignments::instance().addAssignment( Operators::instance().getOperatorByID( Operator::MUX2x1 ),
-                                                           result,Variables::instance().getVariable( args[2] ),
+                                                           result,
+                                                           Variables::instance().getVariable( args[0] ),
+                                                           Variables::instance().getVariable( args[2] ),
                                                            Variables::instance().getVariable( args[4] ) );
                   }
                   else
