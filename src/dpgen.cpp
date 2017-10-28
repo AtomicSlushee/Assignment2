@@ -13,7 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <libgen.h>
+//#include <libgen.h>
 
 // enable debug output
 #define DEBUGOUT if(1)
@@ -225,9 +225,9 @@ bool critical()
   // We have created the file and filled up a vector of nodes.
   // Now create a graph
   graphType<Assignment, 100> graph;
-  graph.createWeightedGraph(nodeList);
+  graph.createWeightedGraph();
     
-    graph.printGraph();
+  graph.printGraph();
   return true;
 }
 
@@ -285,7 +285,7 @@ bool verilog( std::ofstream& out, std::string name )
 
 std::string moduleName(char* argv)
 {
-  std::string name(basename(argv));
+	std::string name(argv); // basename(argv));
   size_t pos = name.find_last_of('.');
   if (std::string::npos != pos)
     name.erase(pos,std::string::npos);

@@ -1,49 +1,127 @@
 
-
 #ifndef graphType_hpp
 #define graphType_hpp
 
 #include <cstdio>
 #include <list>
-#include "linkedListType.hpp"
+#include <vector>
 
-#include "assignment.h" // couldn't template all of it
-
-template<class vType>
-class linkedListGraph: public linkedListType<vType>
-{
-public:
-    void getAdjacentVertices(vType adjacencyList[], int& length);
-};
-
-template <class vType>
-void linkedListGraph<vType>::getAdjacentVertices(vType adjacencyList[], int& length)
-{
-    nodeType<vType> *current;
-    length = 0;
-    current = this->first;
-    
-    while (current != NULL)
-    {
-        adjacencyList[length++] = current->info;
-        current = current->link;
-    }
-}
+#include "assignment.h"
 
 const double infinity = 1000000000;
+
+class Vertex
+{
+public:
+	typedef std::vector<Vertex> NodeVec;
+	typedef std::pair<Vertex, Vertex> IO_Nodes;
+	typedef std::vector<IO_Nodes > AdjacencyNodes;
+
+	Vertex() : pA(0), nodeNum(-1) {}
+	Vertex(Assignment &a, int n) : pA(&a), nodeNum(n) {}
+	~Vertex() {}
+
+	void createDirectedEdges()
+	{
+		NodeVec inputNodes = findInputNodes();
+		NodeVec outputNodes = findOutputNodes();
+
+		for (std::vector<Vertex>::iterator i = inputNodes.begin(); i != inputNodes.end(); i++)
+		{
+			for (std::vector<Vertex>::iterator j = outputNodes.begin(); j != outputNodes.end(); j++)
+			{
+				auto nodePair = std::make_pair(*i, *j);
+				adjacentNodes.push_back(nodePair);
+			}
+		}
+	}
+
+	void printInfo()
+	{
+		std::cout << "Vertex: " << nodeNum << std::endl;
+		std::cout << "        adjacency paths:" << std::endl;
+		for (AdjacencyNodes::iterator i = adjacentNodes.begin(); i != adjacentNodes.end(); i++)
+		{
+			std::cout << "( " << std::get<0>(*i).nodeNum << ", " << std::get<1>(*i).nodeNum << " )" << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
+private:
+	NodeVec findInputNodes()
+	{
+		Assignments tmpNodeList = Assignments::instance();
+		NodeVec inputNodes;
+
+		if (pA)
+		{
+			for (Assignments::iterator_t i = tmpNodeList.begin(); i != tmpNodeList.end(); i++)
+			{
+				if (pA->getInput1().name() == tmpNodeList[i].getResult().name() ||
+					pA->getInput2().name() == tmpNodeList[i].getResult().name() ||
+					pA->getInput3().name() == tmpNodeList[i].getResult().name())
+				{
+					inputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(), i)));
+				}
+				else if (pA->getInput1().ioClass() == IOClass::INPUT ||
+					pA->getInput2().ioClass() == IOClass::INPUT ||
+					pA->getInput3().ioClass() == IOClass::INPUT)
+				{
+					Vertex inputNOP = Vertex(); // creating a dummy vertex using default constructor
+					inputNodes.push_back(inputNOP);
+				}
+
+			}
+		}
+		return inputNodes;
+	}
+
+	NodeVec findOutputNodes()
+	{
+		Assignments tmpNodeList = Assignments::instance();
+		NodeVec outputNodes;
+
+		if (pA)
+		{
+			for (Assignments::iterator_t i = tmpNodeList.begin(); i != tmpNodeList.end(); i++)
+			{
+				if (tmpNodeList[i].getInput1().name() == pA->getResult().name() ||
+					tmpNodeList[i].getInput2().name() == pA->getResult().name() ||
+					tmpNodeList[i].getInput3().name() == pA->getResult().name())
+				{
+					outputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(),i)));
+				}
+				else if (pA->getInput1().ioClass() == IOClass::OUTPUT ||
+					pA->getInput2().ioClass() == IOClass::OUTPUT ||
+					pA->getInput3().ioClass() == IOClass::OUTPUT)
+				{
+					Vertex outputNOP = Vertex(); // creating a dummy vertex using default constructor
+					outputNodes.push_back(outputNOP);
+				}
+			}
+		}
+		return outputNodes;
+	}
+
+	Assignment *pA;
+	int nodeNum;
+
+	// Create a vector of paired nodes representing an input node (1st node), and
+	// and an output node (2nd node).
+	AdjacencyNodes adjacentNodes;
+};
 
 template<class vType, int size>
 class graphType
 {
     
 public:
-    bool isEmpty();
     
     void clearGraph();
     
     void printGraph();
     
-    void createWeightedGraph(std::list<Assignment> nodeList); // can't template this one
+    void createWeightedGraph();
     
     void Reg2RegTopologicalSort(vType vertex);
     
@@ -60,33 +138,16 @@ public:
     ~graphType();
     
 protected:
-    int maxSize;
-    int gSize;
-    double weights[size][size];
-    // TODO edge weights?
-    linkedListGraph<vType> graph[size];
-    
+
+    std::list<Vertex> graph;
+
 };
 
 template <class vType, int size>
-bool graphType<vType,size>::isEmpty()
-{
-    return(gSize == 0);
-    
-}
-
-template <class vType, int size>
-void graphType<vType, size>::createWeightedGraph(std::list<Assignment> nodeList)
+void graphType<vType, size>::createWeightedGraph()
 {
     Assignments unsortedAssignments = Assignments::instance();
-
-    int nodeIdx = 0; // for adding nodes to the graph
-
-    if (gSize != 0)
-    {
-        clearGraph();
-    }
-
+	
     // DEBUG ONLY -- DISPLAY THE NODES FOR REFERENCE
     int n=0;
     for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++,n++)
@@ -104,210 +165,52 @@ void graphType<vType, size>::createWeightedGraph(std::list<Assignment> nodeList)
         // also, wtf would this happen?
         // For now assume only non-blocking assignments.
         
-        graph[nodeIdx].initializeList(); // clears it out for this node
-        
-        graph[nodeIdx].insertLast(unsortedAssignments[i]); // adds node to the graph
-        
-        // Now, check to see how this node connects to the existing nodes (if any)
-        for (int tempNodeIdx = 0; tempNodeIdx < nodeList.size(); tempNodeIdx++)
-        {
-            // check every node in the list to see if any of the outputs match our current inputs
-            // this is a simple way to check for dependencies... perhaps too simple?
-
-            // Todo: if the input to current node are outputs of other nodes then add current node
-            //       to list of other nodes
-            if ( graph[tempNodeIdx].length() > 0 &&
-                (unsortedAssignments[i].getInput1().name() == graph[tempNodeIdx].front().getResult().name()  ||
-                 unsortedAssignments[i].getInput2().name() == graph[tempNodeIdx].front().getResult().name() ||
-                 unsortedAssignments[i].getInput3().name() == graph[tempNodeIdx].front().getResult().name() ))
-            {
-                std::cout << " Node " << nodeIdx << ":" << std::endl;
-                //std::cout << "       OpName: " << unsortedAssignments[i].getOperator().name() << std::endl;
-                std::cout << "       Input1: " << unsortedAssignments[i].getInput1().name() << std::endl;
-                std::cout << "       Input2: " << unsortedAssignments[i].getInput2().name() << std::endl;
-                std::cout << "       Input3: " << unsortedAssignments[i].getInput3().name() << std::endl;
-                std::cout << "       Output: " << unsortedAssignments[i].getResult().name() << std::endl;
-                std::cout << "       Depends on: Node " << tempNodeIdx << std::endl;
-                std::cout << std::endl;
-
-                graph[tempNodeIdx].insertLast(unsortedAssignments[i]);
-                
-                // todo missing some nodes?
-                // todo update the weight
-                
-                weights[nodeIdx][tempNodeIdx] = unsortedAssignments[i].getLatency() + graph[tempNodeIdx].front().getLatency();
-                weights[tempNodeIdx][nodeIdx] = weights[nodeIdx][tempNodeIdx]; // symmetric matrix? eh it'll do for now
-            }
-            else if ( unsortedAssignments[i].getInput1().ioClass() == IOClass::INPUT &&
-                      unsortedAssignments[i].getInput2().ioClass() == IOClass::INPUT &&
-                      unsortedAssignments[i].getInput3().ioClass() == IOClass::INPUT )
-            {
-                // Find all assignments with no dependencies and put them in list
-                // NOTE: Dummy variables are given a default ioClass of INPUT
-
-                std::cout << " Node " << nodeIdx << ":" << std::endl;
-                std::cout << "       Input1: " << unsortedAssignments[i].getInput1().name() << std::endl;
-                std::cout << "       Input2: " << unsortedAssignments[i].getInput2().name() << std::endl;
-                std::cout << "       Input3: " << unsortedAssignments[i].getInput3().name() << std::endl;
-                std::cout << "       Output: " << unsortedAssignments[i].getResult().name() << std::endl;
-                std::cout << "       Depends on: No one." << std::endl;
-                std::cout << std::endl;
- 
-                graph[tempNodeIdx].insertFirst(unsortedAssignments[i]);
-                
-                weights[nodeIdx][tempNodeIdx] = unsortedAssignments[i].getLatency();
-                weights[tempNodeIdx][nodeIdx] = weights[nodeIdx][tempNodeIdx]; // symmetric matrix? eh it'll do for now
-            }
-            else if (nodeIdx == tempNodeIdx)
-            {
-                weights[nodeIdx][tempNodeIdx] = 0; // distance to itself is zero   
-            }
-            else
-            {
-                
-                weights[nodeIdx][tempNodeIdx] = infinity; // no connection infinite weight
-            }
-            
-        }
-        
-        
-        nodeIdx++;
-        //
+		Vertex newVertex(unsortedAssignments[i], std::distance(unsortedAssignments.begin(), i));
+		newVertex.createDirectedEdges();
+		graph.push_back(newVertex);
     }
-
-
 }
 
 template <class vType, int size>
 void graphType<vType,size>::clearGraph()
 {
-    int index;
-    for (index = 0; index < gSize; index++)
-    {
-        this->graph[index].destroyList();
-    }
-    gSize = 0;
+	graph.clear();
 }
 
 template <class vType, int size>
 void graphType<vType, size>::printGraph() 
 {
-    int index;
+    int index = 0;
     
-    for (index = 0; index < size; index++)
+    for (std::list<Vertex>::iterator i = graph.begin(); i != graph.end(); i++)
     {
-        std::cout << index << " ";
-        this->graph[index].print();
-        std::cout << std::endl;
+		std::cout << "Graph Index: " << index++ << std::endl;
+        i->printInfo();
+        std::cout << "--------------------------------------------------" << std::endl;
     }
     
-    std::cout << std::endl;
-    
+    std::cout << std::endl;    
 }
+
 template <class vType, int size>
 void graphType<vType,size>::printLongestPath(vType vertex,bool printPath)
-{
- 
-    // stub for now.
-    
+{    
 }
 
 template <class vType, int size>
 void graphType<vType, size>::longestPath(vType vertex)
-{
-    
-    // stub
-    // The following does some shortest path analysis. Probably useful for longest path
-//    int i,j;
-//    int v = 0;
-//    double minWeight;
-//    
-//    for (j = 0; j < this->gSize; j++)
-//    {
-//        smallestWeight[j] = weights[vertex.info][j];
-//    }
-//    
-//    bool weightFound[maxSize];
-//    for (j = 0; j < this->gSize; j++)
-//    {
-//        weightFound[j] = false;
-//        graph[j].first->predecessor = vertex.info;
-//    }
-//    
-//    weightFound[vertex.info] = true;
-//    smallestWeight[vertex.info] = 0;
-//    
-//    for (i = 0; i < this->gSize - 1; i++)
-//    {
-//        minWeight = infinity;
-//        
-//        for (j = 0; j < this->gSize; j++)
-//        {
-//            if(!weightFound[j])
-//            {
-//                if (smallestWeight[j] < minWeight)
-//                {
-//                    v = j;
-//                    minWeight = smallestWeight[v];
-//                    
-//                    
-//                }
-//            }
-//            
-//        }
-//        
-//        weightFound[v] = true;
-//        
-//        for (j = 0; j < this->gSize; j++)
-//        {
-//            if (!weightFound[j])
-//            {
-//                if (minWeight + weights[v][j] < smallestWeight[j])
-//                {
-//                    smallestWeight[j] = minWeight + weights[v][j];
-//                    graph[j].first->predecessor = v;
-//                    
-//                }
-//            }
-//        }
-//    }
-//    /* This section prints the weights*/
-//    for (int index = 0; index < gSize; index++)
-//    {
-//        std::cout << "node" << index + 1 << std::endl;
-//        for (int j = 0; j < gSize; j++)
-//            std::cout <<"node:" << j + 1 << "\t" << weights[index][j] << std::endl;
-//        
-//        std::cout << std::endl;
-//    }
-    
-    
+{    
 }
-
-
-
 
 template <class vType, int size>
 graphType<vType, size>::graphType()
 {
-    maxSize = size;
-    gSize = 0;
-    for (int i = 0; i < size; i++)
-    {
-        for (int j = 0; j < size; j++)
-        {
-            weights[i][j] = infinity;
-        }
-    }
 }
+
 template <class vType, int size>
 graphType<vType,size>::~graphType()
 {
     clearGraph();
 }
-
-
-
-
 
 #endif /* graphType_hpp */

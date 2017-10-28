@@ -16,11 +16,12 @@ class Assignment
   friend class Assignments;
   
 public:
+
   // constructor
   Assignment( int count, Operator& op, Variable& result, Variable& input1, Variable& input2 = dummyvar(),
               Variable& input3 = dummyvar(), Variable& other1 = dummyvar(), Variable& other2 = dummyvar() )
-      : mCount(count), mWidth(0), mLatency(0.0), mSigned(false), mOperator( op ), mResult( result ), mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 ),
-        mOther1( other1 ), mOther2( other2 )
+        : mCount(count), mWidth(0), mLatency(0.0), mSigned(false), mOperator( op ), mResult( result ),
+	      mOperand1( input1 ), mOperand2( input2 ), mOperand3( input3 ), mOther1( other1 ), mOther2( other2 )
   {
     // determine operator width
     mWidth = result.width();
@@ -30,10 +31,19 @@ public:
     {
       mWidth = (input1.width() > input2.width()) ? input1.width() : input2.width();
     }
+
     // calculate latency through the component
     mLatency = Latencies::instance().getLatency(op,mWidth);
-    // determine whether this component should be signed
+    
+	// determine whether this component should be signed
     mSigned = input1.isSigned() || input2.isSigned() || input3.isSigned();
+  }
+
+  // copy constructor
+  Assignment(const Assignment& a) : mCount(a.mCount), mWidth(a.mWidth), mLatency(a.mLatency), mSigned(a.mSigned),
+	  mOperator(a.mOperator), mResult(a.mResult), mOperand1(a.mOperand1), mOperand2(a.mOperand2),
+	  mOperand3(a.mOperand3), mOther1(a.mOther1), mOther2(a.mOther2)
+  {
   }
   
   // get the assignment operator
@@ -198,12 +208,15 @@ public:
     static Assignments assignments;
     return assignments;
   }
-  Assignment& addAssignment( Operator& op, Variable& output, Variable& input1, Variable& input2 = Assignment::dummyvar(),
-                      Variable& input3 = Assignment::dummyvar(),
-                      Variable& other1 = Assignment::dummyvar(),
-                      Variable& other2 = Assignment::dummyvar())
+  Assignment& addAssignment( Operator& op, 
+	                         Variable& output, 
+	                         Variable& input1, 
+	                         Variable& input2 = Assignment::dummyvar(),
+                             Variable& input3 = Assignment::dummyvar(),
+                             Variable& other1 = Assignment::dummyvar(),
+                             Variable& other2 = Assignment::dummyvar() )
   {
-    Assignment* pA = new Assignment( mCount++,op,output,input1,input2,input3,other1,other2 );
+    Assignment* pA = new Assignment( mCount++, op, output, input1, input2, input3, other1, other2 );
     mAssignments.push_back( *pA );
     return *pA;
   }
@@ -216,9 +229,7 @@ public:
   Assignment& operator[](iterator_t i) { return *i; }
 
 private:
-  Assignments():mCount(0)
-  {
-  }
+  Assignments(): mCount(0) { }
 
   assignments_t mAssignments;
   int mCount;
