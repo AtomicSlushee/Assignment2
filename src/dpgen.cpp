@@ -13,7 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-//#include <libgen.h>
+#include <libgen.h>
 
 // enable debug output
 #define DEBUGOUT if(1)
@@ -285,7 +285,7 @@ bool verilog( std::ofstream& out, std::string name )
 
 std::string moduleName(char* argv)
 {
-	std::string name(argv); // basename(argv));
+  std::string name(basename(argv));
   size_t pos = name.find_last_of('.');
   if (std::string::npos != pos)
     name.erase(pos,std::string::npos);
