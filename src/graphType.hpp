@@ -13,102 +13,115 @@ const double infinity = 1000000000;
 class Vertex
 {
 public:
-	typedef std::vector<Vertex> NodeVec;
-	typedef std::pair<Vertex, Vertex> IO_Nodes;
-	typedef std::vector<IO_Nodes > AdjacencyNodes;
+    typedef std::vector<Vertex> NodeVec;
+    typedef std::pair<Vertex, Vertex> IO_Nodes;
+    typedef std::vector<IO_Nodes > AdjacencyNodes;
 
-	Vertex() : pA(0), nodeNum(-1) {}
-	Vertex(Assignment &a, int n) : pA(&a), nodeNum(n) {}
-	~Vertex() {}
+    Vertex() : pA(0), nodeNum(-1) {}
+    Vertex(Assignment &a, int n) : pA(&a), nodeNum(n) {}
+    ~Vertex() {}
 
-	void createDirectedEdges()
-	{
-		NodeVec inputNodes = findInputNodes();
-		NodeVec outputNodes = findOutputNodes();
+    void createDirectedEdges()
+    {
+        NodeVec inputNodes = findInputNodes();
+        NodeVec outputNodes = findOutputNodes();
 
-		for (std::vector<Vertex>::iterator i = inputNodes.begin(); i != inputNodes.end(); i++)
-		{
-			for (std::vector<Vertex>::iterator j = outputNodes.begin(); j != outputNodes.end(); j++)
-			{
-				auto nodePair = std::make_pair(*i, *j);
-				adjacentNodes.push_back(nodePair);
-			}
-		}
-	}
+        for (std::vector<Vertex>::iterator i = inputNodes.begin(); i != inputNodes.end(); i++)
+        {
+            for (std::vector<Vertex>::iterator j = outputNodes.begin(); j != outputNodes.end(); j++)
+            {
+                auto nodePair = std::make_pair(*i, *j);
+                adjacentNodes.push_back(nodePair);
+            }
+        }
+    }
 
-	void printInfo()
-	{
-		std::cout << "Vertex: " << nodeNum << std::endl;
-		std::cout << "        adjacency paths:" << std::endl;
-		for (AdjacencyNodes::iterator i = adjacentNodes.begin(); i != adjacentNodes.end(); i++)
-		{
-			std::cout << "( " << std::get<0>(*i).nodeNum << ", " << std::get<1>(*i).nodeNum << " )" << std::endl;
-		}
-		std::cout << std::endl;
-	}
+    void printInfo()
+    {
+        std::cout << "Vertex: " << nodeNum << std::endl;
+        std::cout << "        adjacency paths:" << std::endl;
+        for (AdjacencyNodes::iterator i = adjacentNodes.begin(); i != adjacentNodes.end(); i++)
+        {
+            std::cout << "( " << std::get<0>(*i).nodeNum << ", " << std::get<1>(*i).nodeNum << " )" << std::endl;
+        }
+        std::cout << std::endl;
+    }
 
 private:
-	NodeVec findInputNodes()
-	{
-		Assignments tmpNodeList = Assignments::instance();
-		NodeVec inputNodes;
+    NodeVec findInputNodes()
+    {
+        Assignments tmpNodeList = Assignments::instance();
+        NodeVec inputNodes;
 
-		if (pA)
-		{
-			for (Assignments::iterator_t i = tmpNodeList.begin(); i != tmpNodeList.end(); i++)
-			{
-				if (pA->getInput1().name() == tmpNodeList[i].getResult().name() ||
-					pA->getInput2().name() == tmpNodeList[i].getResult().name() ||
-					pA->getInput3().name() == tmpNodeList[i].getResult().name())
-				{
-					inputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(), i)));
-				}
-				else if (pA->getInput1().ioClass() == IOClass::INPUT ||
-					pA->getInput2().ioClass() == IOClass::INPUT ||
-					pA->getInput3().ioClass() == IOClass::INPUT)
-				{
-					Vertex inputNOP = Vertex(); // creating a dummy vertex using default constructor
-					inputNodes.push_back(inputNOP);
-				}
+        if (pA)
+        {
+            if (pA->getInput1().ioClass() == IOClass::INPUT ||
+                pA->getInput2().ioClass() == IOClass::INPUT ||
+                pA->getInput3().ioClass() == IOClass::INPUT)
+            {
+                Vertex inputNOP = Vertex(); // creating a dummy vertex using default constructor
+                inputNodes.push_back(inputNOP);
+            }
+           
+            for (Assignments::iterator_t i = tmpNodeList.begin(); i != tmpNodeList.end(); i++)
+            { 
+                if (nodeNum != std::distance(tmpNodeList.begin(),i))
+                {
+                    if (pA->getInput1().name() == tmpNodeList[i].getResult().name() ||
+			pA->getInput2().name() == tmpNodeList[i].getResult().name() ||
+			pA->getInput3().name() == tmpNodeList[i].getResult().name())
+                    {
+                        inputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(), i)));
+                    }
+                }
+                else 
+                {
+                    std::cout << "Saying Hello to myself" << std::endl;
+                }
+             }
+        }
+        return inputNodes;
+    }
 
-			}
-		}
-		return inputNodes;
-	}
+    NodeVec findOutputNodes()
+    {
+        Assignments tmpNodeList = Assignments::instance();
+        NodeVec outputNodes;
 
-	NodeVec findOutputNodes()
-	{
-		Assignments tmpNodeList = Assignments::instance();
-		NodeVec outputNodes;
+        if (pA)
+        {
+            if (pA->getResult().ioClass() == IOClass::OUTPUT)
+            {
+                Vertex outputNOP = Vertex(); // creating a dummy vertex using default constructor
+                outputNodes.push_back(outputNOP);
+            }
 
-		if (pA)
-		{
-			for (Assignments::iterator_t i = tmpNodeList.begin(); i != tmpNodeList.end(); i++)
-			{
-				if (tmpNodeList[i].getInput1().name() == pA->getResult().name() ||
-					tmpNodeList[i].getInput2().name() == pA->getResult().name() ||
-					tmpNodeList[i].getInput3().name() == pA->getResult().name())
-				{
-					outputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(),i)));
-				}
-				else if (pA->getInput1().ioClass() == IOClass::OUTPUT ||
-					pA->getInput2().ioClass() == IOClass::OUTPUT ||
-					pA->getInput3().ioClass() == IOClass::OUTPUT)
-				{
-					Vertex outputNOP = Vertex(); // creating a dummy vertex using default constructor
-					outputNodes.push_back(outputNOP);
-				}
-			}
-		}
-		return outputNodes;
-	}
+            for (Assignments::iterator_t i = tmpNodeList.begin(); i != tmpNodeList.end(); i++)
+            {
+                if (nodeNum != std::distance(tmpNodeList.begin(),i))
+                {
+                    if (tmpNodeList[i].getInput1().name() == pA->getResult().name() ||
+                        tmpNodeList[i].getInput2().name() == pA->getResult().name() ||
+                        tmpNodeList[i].getInput3().name() == pA->getResult().name())
+                    {
+                        outputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(),i)));
+                    }
+                }
+                else 
+                {
+                    std::cout << "Saying Hello to myself again" << std::endl;
+                }
+            }
+        }
+        return outputNodes;
+    }
 
-	Assignment *pA;
-	int nodeNum;
+    Assignment *pA;
+    int nodeNum;
 
-	// Create a vector of paired nodes representing an input node (1st node), and
-	// and an output node (2nd node).
-	AdjacencyNodes adjacentNodes;
+    // Create a vector of paired nodes representing an input node (1st node), and
+    // and an output node (2nd node).
+    AdjacencyNodes adjacentNodes;
 };
 
 template<class vType, int size>
@@ -165,16 +178,16 @@ void graphType<vType, size>::createWeightedGraph()
         // also, wtf would this happen?
         // For now assume only non-blocking assignments.
         
-		Vertex newVertex(unsortedAssignments[i], std::distance(unsortedAssignments.begin(), i));
-		newVertex.createDirectedEdges();
-		graph.push_back(newVertex);
+        Vertex newVertex(unsortedAssignments[i], std::distance(unsortedAssignments.begin(), i));
+        newVertex.createDirectedEdges();
+        graph.push_back(newVertex);
     }
 }
 
 template <class vType, int size>
 void graphType<vType,size>::clearGraph()
 {
-	graph.clear();
+    graph.clear();
 }
 
 template <class vType, int size>
@@ -184,7 +197,7 @@ void graphType<vType, size>::printGraph()
     
     for (std::list<Vertex>::iterator i = graph.begin(); i != graph.end(); i++)
     {
-		std::cout << "Graph Index: " << index++ << std::endl;
+        std::cout << "Graph Index: " << index++ << std::endl;
         i->printInfo();
         std::cout << "--------------------------------------------------" << std::endl;
     }
