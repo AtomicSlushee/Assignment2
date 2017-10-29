@@ -226,11 +226,12 @@ bool critical()
   // Now create a graph
   graphType<Assignment, 100> graph;
   graph.createWeightedGraph();
-  graph.topologicalSort();
-  graph.longestPath();
-    
+  graph.topologicalSort();    
   graph.printGraph();
+
+  graph.longestPath();
   graph.printLongestPath();
+  
   return true;
 }
 
