@@ -346,7 +346,10 @@ void graphType<vType,size>::printLongestPath()
         std::cout << *i << " -> ";
     }
     std::cout << " ONOP" << std::endl;
-    std::cout << "      Latency = " << maxSum << std::endl;
+    std::cout << std::endl;
+    std::cout << "      Latency = " << maxSum << " ns" << std::endl;
+    std::cout << "------------------------------------------------------------------------" << std::endl;
+    std::cout << std::endl;
 }
 
 template <class vType, int size>
