@@ -19,16 +19,16 @@ public:
 
     Vertex() : pA(0), nodeNum(-1) {}
     Vertex(Assignment &a, int n) : pA(&a), nodeNum(n) {}
-    ~Vertex() {}
+    ~Vertex() { }
 
     void createDirectedEdges()
     {
         NodeVec inputNodes = findInputNodes();
         NodeVec outputNodes = findOutputNodes();
 
-        for (std::vector<Vertex>::iterator i = inputNodes.begin(); i != inputNodes.end(); i++)
+        for (auto i = inputNodes.begin(); i != inputNodes.end(); i++)
         {
-            for (std::vector<Vertex>::iterator j = outputNodes.begin(); j != outputNodes.end(); j++)
+            for (auto j = outputNodes.begin(); j != outputNodes.end(); j++)
             {
                 auto nodePair = std::make_pair(*i, *j);
                 adjacentNodes.push_back(nodePair);
@@ -40,12 +40,15 @@ public:
     {
         std::cout << "Vertex: " << nodeNum << std::endl;
         std::cout << "        adjacency paths:" << std::endl;
-        for (AdjacencyNodes::iterator i = adjacentNodes.begin(); i != adjacentNodes.end(); i++)
+        for (auto i = adjacentNodes.begin(); i != adjacentNodes.end(); i++)
         {
             std::cout << "( " << std::get<0>(*i).nodeNum << ", " << std::get<1>(*i).nodeNum << " )" << std::endl;
         }
         std::cout << std::endl;
     }
+
+    AdjacencyNodes getAdjacencyList() const { return adjacentNodes; }
+    int getNodeNumber() const { return nodeNum; }
 
 private:
     NodeVec findInputNodes()
@@ -136,9 +139,9 @@ public:
     
     void createWeightedGraph();
     
-    void Reg2RegTopologicalSort(vType vertex);
+    void topologicalSort();
     
-    void Reg2RegTSvisit(vType vertex);
+    void TSvisit(Vertex &v);
     
     void Reg2RegLongestPath();
     
@@ -151,8 +154,21 @@ public:
     ~graphType();
     
 protected:
+    enum VisitationColor
+    {
+        WHITE = -1, // Not yet visited
+        GRAY,       // vertex visited, but edges not exhausted
+        BLACK       // vertex and edges visited
+    };
 
     std::list<Vertex> graph;
+    std::list<int> topoSortGraph; // Just keeping track of node numbers and sorting off that
+
+    // creating a map between nodes and visitation status.
+    // -- normally I'd try to put visit status in the Vertex class, but then I'd have to
+    //    keep track of lists of lists of pointers to make sure the right vertex objects
+    //    aren't mixed up. What a headache though--keeping a separate scratchpad instead
+    std::map<int, VisitationColor> topoNodeVisits;
 
 };
 
@@ -185,6 +201,43 @@ void graphType<vType, size>::createWeightedGraph()
 }
 
 template <class vType, int size>
+void graphType<vType, size>::TSvisit(Vertex &v)
+{
+    topoNodeVisits[v.getNodeNumber()] = GRAY;
+    Vertex::AdjacencyNodes adjList = v.getAdjacencyList();
+    for (auto n = adjList.begin(); n != adjList.end(); n++)
+    {
+        Vertex outNode = std::get<0>(*n);
+        
+        if (topoNodeVisits[outNode.getNodeNumber()] == WHITE && outNode.getNodeNumber() != -1)
+        {
+            TSvisit(outNode);
+        }
+    }
+
+    topoNodeVisits[v.getNodeNumber()] = BLACK;
+    topoSortGraph.push_back(v.getNodeNumber());
+}
+
+template <class vType, int size>
+void graphType<vType, size>::topologicalSort()
+{
+    // Initialize topoNodeVisits map by making all vertices WHITE
+    for (auto vertex = graph.begin(); vertex != graph.end(); vertex++)
+    {
+        topoNodeVisits[vertex->getNodeNumber()] = WHITE;
+    }
+
+    for (auto vertex = graph.begin(); vertex != graph.end(); vertex++)
+    {
+        if (topoNodeVisits[vertex->getNodeNumber()] == WHITE)
+        {
+            TSvisit(*vertex);
+        }
+    }
+}
+
+template <class vType, int size>
 void graphType<vType,size>::clearGraph()
 {
     graph.clear();
@@ -194,14 +247,26 @@ template <class vType, int size>
 void graphType<vType, size>::printGraph() 
 {
     int index = 0;
-    
-    for (std::list<Vertex>::iterator i = graph.begin(); i != graph.end(); i++)
+    std::cout << "=====================================================================" << std::endl;
+
+    for (auto i = graph.begin(); i != graph.end(); i++)
     {
         std::cout << "Graph Index: " << index++ << std::endl;
         i->printInfo();
         std::cout << "--------------------------------------------------" << std::endl;
     }
+    std::cout << std::endl;
+
+    std::cout << "=====================================================================" << std::endl;
     
+    std::cout << "Topo Sort List: " << std::endl;
+    std::cout << "      INOP -> ";
+    for (auto i = topoSortGraph.begin(); i != topoSortGraph.end(); i++)
+    {
+        std::cout << *i << " -> ";
+    }
+    std::cout << "ONOP" << std::endl;
+    std::cout << "--------------------------------------------------" << std::endl;
     std::cout << std::endl;    
 }
 
