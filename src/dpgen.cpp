@@ -230,6 +230,7 @@ bool critical()
   graph.longestPath();
     
   graph.printGraph();
+  graph.printLongestPath();
   return true;
 }
 

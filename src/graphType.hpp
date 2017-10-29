@@ -140,7 +140,7 @@ public:
     
     void longestPath();
     
-    void printLongestPath(vType vertex, bool printPath);
+    void printLongestPath();
     
     graphType();
     
@@ -156,7 +156,6 @@ protected:
 
     std::vector<Vertex> graph;
     std::list<int> topoSortGraph; // Just keeping track of node numbers and sorting off that
-    std::list<int> longestPathSeq;
 
     // creating a map between nodes and visitation status.
     // -- normally I'd try to put visit status in the Vertex class, but then I'd have to
@@ -166,7 +165,11 @@ protected:
     
     // creating a map of nodes and cumalative distances to find longest path. 
     // -- this is another scratchpad to avoid complexity of linked lists of lists.
-    std::map<int, double> cumalativeSumMap;
+    std::map<int, double> cumalativeSumMap; // (nodeNum, cumSum)
+
+    // creating another map to keep track of the input Node having the largest
+    // contribution to the current node's cumalative sum
+    std::map<int, int> largestPredNodeMap;   // (nodeNum, maxPredecessorNode)
 
 };
 
@@ -241,38 +244,42 @@ void graphType<vType, size>::longestPath()
     // Initialize cumalativeDist map by giving all vertices zero weight
     for (auto vertex = graph.begin(); vertex != graph.end(); vertex++)
     {
-        cumalativeSumMap[vertex->getNodeNumber()] = 0.0;
+        cumalativeSumMap[vertex->getNodeNumber()] = vertex->getNodeWeight();
+        largestPredNodeMap[vertex->getNodeNumber()] = -1; 
     }
 
     for (auto vi = topoSortGraph.begin(); vi != topoSortGraph.end(); vi++)
-    {     
+    {   
         Vertex::AdjacencyNodes adjList = graph[*vi].getAdjacencyList();
         for (auto n = adjList.begin(); n != adjList.end(); n++)
         {
-            Vertex outNode = std::get<1>(*n);
+            Vertex inNode = std::get<0>(*n);
             
-            if ( outNode.getNodeNumber() != -1 )
+            if ( inNode.getNodeNumber() != -1 )
             {
-                if ( (outNode.getNodeWeight() + graph[*vi].getNodeWeight()) > cumalativeSumMap[outNode.getNodeNumber()] )
+                int iNodeNum = inNode.getNodeNumber();
+                if ( (cumalativeSumMap[iNodeNum] + graph[*vi].getNodeWeight()) > cumalativeSumMap[graph[*vi].getNodeNumber()] )
                 {
-                    cumalativeSumMap[outNode.getNodeNumber()] = outNode.getNodeWeight() + graph[*vi].getNodeWeight();
+                    cumalativeSumMap[graph[*vi].getNodeNumber()] = cumalativeSumMap[iNodeNum] + graph[*vi].getNodeWeight();
+                    largestPredNodeMap[graph[*vi].getNodeNumber()] = iNodeNum;
                 }
-            }
-            else
-            {   
-                //cumalativeSumMap[graph[*vi].getNodeNumber()] = graph[*vi].getNodeWeight();
             }
         }
     }
-
+    
     std::cout << "============================================================="<< std::endl;
-    std::cout << "Cumalative Sum Map: "<< std::endl;
+    std::cout << "Cumalative Sum Map - (node, cumSum)"<< std::endl;
     double maxCumWeight = 0;
     for (auto n = cumalativeSumMap.begin(); n != cumalativeSumMap.end(); n++)
     {
-        //longestPathSeq
         std::cout << "        ( " << std::get<0>(*n) << ", " << std::get<1>(*n) << " )" << std::endl;
-    }    
+    }
+    std::cout << std::endl;
+    std::cout << "Map to Largest Predecessor - (node, maxPredNode)" << std::endl;
+    for (auto n = largestPredNodeMap.begin(); n != largestPredNodeMap.end(); n++)
+    {
+        std::cout << "        ( " << std::get<0>(*n) << ", " << std::get<1>(*n) << " )" << std::endl;
+    }
 }
 
 template <class vType, int size>
@@ -286,7 +293,8 @@ void graphType<vType, size>::printGraph()
 {
     int index = 0;
     std::cout << "=====================================================================" << std::endl;
-
+    std::cout << "adjacency paths => (inputNode, outputNode); -1 => NOP" << std::endl;
+    std::cout << std::endl;
     for (auto gi = graph.begin(); gi != graph.end(); gi++)
     {
         std::cout << "Graph Index: " << index++ << std::endl;
@@ -305,21 +313,40 @@ void graphType<vType, size>::printGraph()
     }
     std::cout << "ONOP" << std::endl;
     std::cout << "--------------------------------------------------" << std::endl;
-    
-    index = 0;
-    for (auto i = topoSortGraph.begin(); i != topoSortGraph.end(); i++)
-    {
-        std::cout << "Graph Index: " << index++ << std::endl;
-        graph[*i].printInfo();
-    }
-    std::cout << std::endl;
-    std::cout << "--------------------------------------------------" << std::endl;
-    std::cout << std::endl;    
 }
 
 template <class vType, int size>
-void graphType<vType,size>::printLongestPath(vType vertex,bool printPath)
-{    
+void graphType<vType,size>::printLongestPath()
+{
+    int maxNode = 0;
+    double maxSum = 0.0;
+    for (auto mapPair = cumalativeSumMap.begin(); mapPair != cumalativeSumMap.end(); mapPair++)
+    {
+        if (std::get<1>(*mapPair) > maxSum)
+        {
+            maxNode = std::get<0>(*mapPair);
+            maxSum = std::get<1>(*mapPair);
+        }
+    }
+    
+    std::list<int> longestPathSeq;
+    int predNode = maxNode;
+    while ( predNode != -1)
+    {
+        longestPathSeq.push_front(predNode);
+        predNode = largestPredNodeMap[predNode]; 
+    }
+
+    std::cout << std::endl;
+    std::cout << "========================================================================" << std::endl;
+    std::cout << "Critical Path: " << std::endl;
+    std::cout << "      INOP -> ";
+    for (auto i = longestPathSeq.begin(); i != longestPathSeq.end(); i++)
+    {
+        std::cout << *i << " -> ";
+    }
+    std::cout << " ONOP" << std::endl;
+    std::cout << "      Latency = " << maxSum << std::endl;
 }
 
 template <class vType, int size>
