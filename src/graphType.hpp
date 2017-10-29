@@ -10,6 +10,9 @@
 
 const double infinity = 1000000000;
 
+#define DEBUG_PRINTS 1
+//#define DEBUG_PRINTS 0
+
 class Vertex
 {
 public:
@@ -115,12 +118,11 @@ private:
     Assignment *pA;
     int nodeNum;
 
-    // Create a vector of paired nodes representing an input node (1st node), and
-    // and an output node (2nd node).
+    // Create a vector of paired nodes representing an input node 
+    // (1st element in pair), and an output node (2nd element in pair).
     AdjacencyNodes adjacentNodes;
 };
 
-template<class vType, int size>
 class graphType
 {
     
@@ -143,7 +145,7 @@ public:
     void printLongestPath();
     
     graphType();
-    
+ 
     ~graphType();
     
 protected:
@@ -158,13 +160,9 @@ protected:
     std::list<int> topoSortGraph; // Just keeping track of node numbers and sorting off that
 
     // creating a map between nodes and visitation status.
-    // -- normally I'd try to put visit status in the Vertex class, but then I'd have to
-    //    keep track of lists of lists of pointers to make sure the right vertex objects
-    //    aren't mixed up. What a headache though--keeping a separate scratchpad instead
     std::map<int, VisitationColor> topoNodeVisits;
     
-    // creating a map of nodes and cumalative distances to find longest path. 
-    // -- this is another scratchpad to avoid complexity of linked lists of lists.
+    // creating a map of nodes and cumalative distances to find longest path.
     std::map<int, double> cumalativeSumMap; // (nodeNum, cumSum)
 
     // creating another map to keep track of the input Node having the largest
@@ -173,17 +171,18 @@ protected:
 
 };
 
-template <class vType, int size>
-void graphType<vType, size>::createWeightedGraph()
+void graphType::createWeightedGraph()
 {
     Assignments unsortedAssignments = Assignments::instance();
 	
     // DEBUG ONLY -- DISPLAY THE NODES FOR REFERENCE
+#if(DEBUG_PRINTS)
     int n=0;
     for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++,n++)
     {
       std::cout << "Node " << n << ": " << *i << std::endl;
     }
+#endif
 
     for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++)
     {
@@ -192,7 +191,6 @@ void graphType<vType, size>::createWeightedGraph()
         // t1 = a + b
         // t1 = b + c
         // ^ this shouldn't happen in verilog unless something like a blocking assignment is used.
-        // also, wtf would this happen?
         // For now assume only non-blocking assignments.
         
         Vertex newVertex(unsortedAssignments[i], std::distance(unsortedAssignments.begin(), i));
@@ -201,8 +199,7 @@ void graphType<vType, size>::createWeightedGraph()
     }
 }
 
-template <class vType, int size>
-void graphType<vType, size>::TSvisit(Vertex &v)
+void graphType::TSvisit(Vertex &v)
 {
     topoNodeVisits[v.getNodeNumber()] = GRAY;
     Vertex::AdjacencyNodes adjList = v.getAdjacencyList();
@@ -220,8 +217,7 @@ void graphType<vType, size>::TSvisit(Vertex &v)
     topoSortGraph.push_back(v.getNodeNumber());
 }
 
-template <class vType, int size>
-void graphType<vType, size>::topologicalSort()
+void graphType::topologicalSort()
 {
     // Initialize topoNodeVisits map by making all vertices WHITE
     for (auto vertex = graph.begin(); vertex != graph.end(); vertex++)
@@ -238,18 +234,24 @@ void graphType<vType, size>::topologicalSort()
     }
 }
 
-template <class vType, int size>
-void graphType<vType, size>::longestPath()
+void graphType::longestPath()
 {
-    // Initialize cumalativeDist map by giving all vertices zero weight
+    // Initialize cumalative sum map with vertices' own weights
     for (auto vertex = graph.begin(); vertex != graph.end(); vertex++)
     {
         cumalativeSumMap[vertex->getNodeNumber()] = vertex->getNodeWeight();
         largestPredNodeMap[vertex->getNodeNumber()] = -1; 
     }
 
+    for (auto i = cumalativeSumMap.begin(); i != cumalativeSumMap.end(); i++)
+    {
+        std::cout << "cumSumInit " << std::get<1>(*i) << std::endl;
+    }
+
     for (auto vi = topoSortGraph.begin(); vi != topoSortGraph.end(); vi++)
     {   
+        // Cycle through the input nodes to find largest contributor to cumalative latency
+        std::cout << "                     vertex " << *vi << std::endl;
         Vertex::AdjacencyNodes adjList = graph[*vi].getAdjacencyList();
         for (auto n = adjList.begin(); n != adjList.end(); n++)
         {
@@ -258,15 +260,18 @@ void graphType<vType, size>::longestPath()
             if ( inNode.getNodeNumber() != -1 )
             {
                 int iNodeNum = inNode.getNodeNumber();
+                std::cout << "                      inode " << iNodeNum << "   cumSum " << cumalativeSumMap[iNodeNum] << std::endl;
                 if ( (cumalativeSumMap[iNodeNum] + graph[*vi].getNodeWeight()) > cumalativeSumMap[graph[*vi].getNodeNumber()] )
                 {
                     cumalativeSumMap[graph[*vi].getNodeNumber()] = cumalativeSumMap[iNodeNum] + graph[*vi].getNodeWeight();
                     largestPredNodeMap[graph[*vi].getNodeNumber()] = iNodeNum;
                 }
+                std::cout << "                            maxInNode " << iNodeNum << "   maxCumSum "  << cumalativeSumMap[iNodeNum] << std::endl;
             }
         }
     }
-    
+
+#if(DEBUG_PRINTS)    
     std::cout << "============================================================="<< std::endl;
     std::cout << "Cumalative Sum Map - (node, cumSum)"<< std::endl;
     double maxCumWeight = 0;
@@ -280,21 +285,21 @@ void graphType<vType, size>::longestPath()
     {
         std::cout << "        ( " << std::get<0>(*n) << ", " << std::get<1>(*n) << " )" << std::endl;
     }
+#endif
 }
 
-template <class vType, int size>
-void graphType<vType,size>::clearGraph()
+void graphType::clearGraph()
 {
     graph.clear();
 }
 
-template <class vType, int size>
-void graphType<vType, size>::printGraph() 
+void graphType::printGraph() 
 {
     int index = 0;
     std::cout << "=====================================================================" << std::endl;
     std::cout << "adjacency paths => (inputNode, outputNode); -1 => NOP" << std::endl;
     std::cout << std::endl;
+
     for (auto gi = graph.begin(); gi != graph.end(); gi++)
     {
         std::cout << "Graph Index: " << index++ << std::endl;
@@ -315,8 +320,7 @@ void graphType<vType, size>::printGraph()
     std::cout << "--------------------------------------------------" << std::endl;
 }
 
-template <class vType, int size>
-void graphType<vType,size>::printLongestPath()
+void graphType::printLongestPath()
 {
     int maxNode = 0;
     double maxSum = 0.0;
@@ -352,13 +356,11 @@ void graphType<vType,size>::printLongestPath()
     std::cout << std::endl;
 }
 
-template <class vType, int size>
-graphType<vType, size>::graphType()
+graphType::graphType()
 {
 }
 
-template <class vType, int size>
-graphType<vType,size>::~graphType()
+graphType::~graphType()
 {
     clearGraph();
 }

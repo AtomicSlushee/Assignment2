@@ -224,10 +224,11 @@ bool critical()
 
   // We have created the file and filled up a vector of nodes.
   // Now create a graph
-  graphType<Assignment, 100> graph;
+  graphType graph;
   graph.createWeightedGraph();
   graph.topologicalSort();    
-  graph.printGraph();
+  
+  DEBUGOUT graph.printGraph();
 
   graph.longestPath();
   graph.printLongestPath();
