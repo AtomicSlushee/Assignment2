@@ -49,6 +49,7 @@ public:
 
     AdjacencyNodes getAdjacencyList() const { return adjacentNodes; }
     int getNodeNumber() const { return nodeNum; }
+    double getNodeWeight() const { return pA->getLatency(); }
 
 private:
     NodeVec findInputNodes()
@@ -76,10 +77,6 @@ private:
                     {
                         inputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(), i)));
                     }
-                }
-                else 
-                {
-                    std::cout << "Saying Hello to myself" << std::endl;
                 }
              }
         }
@@ -109,10 +106,6 @@ private:
                     {
                         outputNodes.push_back(Vertex(tmpNodeList[i], std::distance(tmpNodeList.begin(),i)));
                     }
-                }
-                else 
-                {
-                    std::cout << "Saying Hello to myself again" << std::endl;
                 }
             }
         }
@@ -145,7 +138,7 @@ public:
     
     void Reg2RegLongestPath();
     
-    void longestPath(vType vertex);
+    void longestPath();
     
     void printLongestPath(vType vertex, bool printPath);
     
@@ -161,14 +154,19 @@ protected:
         BLACK       // vertex and edges visited
     };
 
-    std::list<Vertex> graph;
+    std::vector<Vertex> graph;
     std::list<int> topoSortGraph; // Just keeping track of node numbers and sorting off that
+    std::list<int> longestPathSeq;
 
     // creating a map between nodes and visitation status.
     // -- normally I'd try to put visit status in the Vertex class, but then I'd have to
     //    keep track of lists of lists of pointers to make sure the right vertex objects
     //    aren't mixed up. What a headache though--keeping a separate scratchpad instead
     std::map<int, VisitationColor> topoNodeVisits;
+    
+    // creating a map of nodes and cumalative distances to find longest path. 
+    // -- this is another scratchpad to avoid complexity of linked lists of lists.
+    std::map<int, double> cumalativeSumMap;
 
 };
 
@@ -207,11 +205,11 @@ void graphType<vType, size>::TSvisit(Vertex &v)
     Vertex::AdjacencyNodes adjList = v.getAdjacencyList();
     for (auto n = adjList.begin(); n != adjList.end(); n++)
     {
-        Vertex outNode = std::get<0>(*n);
+        Vertex inNode = std::get<0>(*n);
         
-        if (topoNodeVisits[outNode.getNodeNumber()] == WHITE && outNode.getNodeNumber() != -1)
+        if (topoNodeVisits[inNode.getNodeNumber()] == WHITE && inNode.getNodeNumber() != -1)
         {
-            TSvisit(outNode);
+            TSvisit(inNode);
         }
     }
 
@@ -238,6 +236,46 @@ void graphType<vType, size>::topologicalSort()
 }
 
 template <class vType, int size>
+void graphType<vType, size>::longestPath()
+{
+    // Initialize cumalativeDist map by giving all vertices zero weight
+    for (auto vertex = graph.begin(); vertex != graph.end(); vertex++)
+    {
+        cumalativeSumMap[vertex->getNodeNumber()] = 0.0;
+    }
+
+    for (auto vi = topoSortGraph.begin(); vi != topoSortGraph.end(); vi++)
+    {     
+        Vertex::AdjacencyNodes adjList = graph[*vi].getAdjacencyList();
+        for (auto n = adjList.begin(); n != adjList.end(); n++)
+        {
+            Vertex outNode = std::get<1>(*n);
+            
+            if ( outNode.getNodeNumber() != -1 )
+            {
+                if ( (outNode.getNodeWeight() + graph[*vi].getNodeWeight()) > cumalativeSumMap[outNode.getNodeNumber()] )
+                {
+                    cumalativeSumMap[outNode.getNodeNumber()] = outNode.getNodeWeight() + graph[*vi].getNodeWeight();
+                }
+            }
+            else
+            {   
+                //cumalativeSumMap[graph[*vi].getNodeNumber()] = graph[*vi].getNodeWeight();
+            }
+        }
+    }
+
+    std::cout << "============================================================="<< std::endl;
+    std::cout << "Cumalative Sum Map: "<< std::endl;
+    double maxCumWeight = 0;
+    for (auto n = cumalativeSumMap.begin(); n != cumalativeSumMap.end(); n++)
+    {
+        //longestPathSeq
+        std::cout << "        ( " << std::get<0>(*n) << ", " << std::get<1>(*n) << " )" << std::endl;
+    }    
+}
+
+template <class vType, int size>
 void graphType<vType,size>::clearGraph()
 {
     graph.clear();
@@ -249,10 +287,10 @@ void graphType<vType, size>::printGraph()
     int index = 0;
     std::cout << "=====================================================================" << std::endl;
 
-    for (auto i = graph.begin(); i != graph.end(); i++)
+    for (auto gi = graph.begin(); gi != graph.end(); gi++)
     {
         std::cout << "Graph Index: " << index++ << std::endl;
-        i->printInfo();
+        gi->printInfo();
         std::cout << "--------------------------------------------------" << std::endl;
     }
     std::cout << std::endl;
@@ -267,16 +305,20 @@ void graphType<vType, size>::printGraph()
     }
     std::cout << "ONOP" << std::endl;
     std::cout << "--------------------------------------------------" << std::endl;
+    
+    index = 0;
+    for (auto i = topoSortGraph.begin(); i != topoSortGraph.end(); i++)
+    {
+        std::cout << "Graph Index: " << index++ << std::endl;
+        graph[*i].printInfo();
+    }
+    std::cout << std::endl;
+    std::cout << "--------------------------------------------------" << std::endl;
     std::cout << std::endl;    
 }
 
 template <class vType, int size>
 void graphType<vType,size>::printLongestPath(vType vertex,bool printPath)
-{    
-}
-
-template <class vType, int size>
-void graphType<vType, size>::longestPath(vType vertex)
 {    
 }
 

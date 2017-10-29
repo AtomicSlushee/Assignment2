@@ -227,6 +227,7 @@ bool critical()
   graphType<Assignment, 100> graph;
   graph.createWeightedGraph();
   graph.topologicalSort();
+  graph.longestPath();
     
   graph.printGraph();
   return true;
