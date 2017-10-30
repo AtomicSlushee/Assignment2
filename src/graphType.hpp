@@ -22,19 +22,11 @@ public:
     typedef std::vector<IO_Nodes > AdjacencyNodes;
 
     Vertex() : pA(nullptr), nodeNum(-1) {}
-	Vertex(const Vertex &v) : nodeNum(v.nodeNum)
-	{
-		pA = std::move(v.pA);
-	}
-	Vertex(Vertex &&v) : nodeNum(v.nodeNum)
-	{
-		pA = std::move(v.pA);
-	}
     Vertex(std::shared_ptr<Assignment> a_ptr, int n) : nodeNum(n) 
-	{
-		pA = a_ptr;
-		std::cout << "Constructing Vertex node " << nodeNum << "  pA = " << pA << "  latency = " << pA->getLatency() << std::endl;
-	}
+    {
+        pA = a_ptr;
+        std::cout << "Constructing Vertex node " << nodeNum << "  pA = " << pA << "  latency = " << pA->getLatency() << std::endl;
+    }
     ~Vertex() { }
 
     void createDirectedEdges()
@@ -66,10 +58,10 @@ public:
     AdjacencyNodes getAdjacencyList() const { return adjacentNodes; }
     int getNodeNumber() const { return nodeNum; }
     double getNodeWeight() const 
-	{ 
-		std::cout << "Calling getNodeWeight " << nodeNum << "  pA = " << pA << "  latency = " << pA->getLatency() << std::endl;
-		return pA->getLatency(); 
-	}
+    { 
+        std::cout << "Calling getNodeWeight " << nodeNum << "  pA = " << pA << "  latency = " << pA->getLatency() << std::endl;
+        return pA->getLatency(); 
+    }
 
 private:
     NodeVec findInputNodes()
@@ -95,7 +87,7 @@ private:
 			pA->getInput2().name() == tmpNodeList[i].getResult().name() ||
 			pA->getInput3().name() == tmpNodeList[i].getResult().name())
                     {
-						std::shared_ptr<Assignment> pAssignment = std::make_shared<Assignment>(tmpNodeList[i]);
+                        std::shared_ptr<Assignment> pAssignment = std::make_shared<Assignment>(tmpNodeList[i]);
                         inputNodes.push_back(Vertex(pAssignment, std::distance(tmpNodeList.begin(), i)));
                     }
                 }
@@ -125,7 +117,7 @@ private:
                         tmpNodeList[i].getInput2().name() == pA->getResult().name() ||
                         tmpNodeList[i].getInput3().name() == pA->getResult().name())
                     {
-						std::shared_ptr<Assignment> pAssignment = std::make_shared<Assignment>(tmpNodeList[i]);
+			std::shared_ptr<Assignment> pAssignment = std::make_shared<Assignment>(tmpNodeList[i]);
                         outputNodes.push_back(Vertex(pAssignment, std::distance(tmpNodeList.begin(),i)));
                     }
                 }
@@ -211,11 +203,12 @@ void graphType::createWeightedGraph()
         // t1 = b + c
         // ^ this shouldn't happen in verilog unless something like a blocking assignment is used.
         // For now assume only non-blocking assignments.
-		std::shared_ptr<Assignment> pAssignment = std::make_shared<Assignment>(unsortedAssignments[i]);
+        std::shared_ptr<Assignment> pAssignment = std::make_shared<Assignment>(unsortedAssignments[i]);
         Vertex newVertex(pAssignment, std::distance(unsortedAssignments.begin(), i));
         newVertex.createDirectedEdges();
         graph.push_back(newVertex);
     }
+    
 }
 
 void graphType::TSvisit(Vertex &v)

@@ -38,13 +38,6 @@ public:
 	// determine whether this component should be signed
     mSigned = input1.isSigned() || input2.isSigned() || input3.isSigned();
   }
-
-  // copy constructor
-  Assignment(const Assignment& a) : mCount(a.mCount), mWidth(a.mWidth), mLatency(a.mLatency), mSigned(a.mSigned),
-	  mOperator(a.mOperator), mResult(a.mResult), mOperand1(a.mOperand1), mOperand2(a.mOperand2),
-	  mOperand3(a.mOperand3), mOther1(a.mOther1), mOther2(a.mOther2)
-  {
-  }
   
   // get the assignment operator
   const Operator& getOperator()
