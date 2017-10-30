@@ -11,8 +11,8 @@
 
 const double infinity = 1000000000;
 
-#define DEBUG_PRINTS 1
-//#define DEBUG_PRINTS 0
+// #define DEBUG_PRINTS 1
+#define DEBUG_PRINTS 0
 
 class Vertex
 {
@@ -138,6 +138,8 @@ public:
     
     void printGraph();
     
+    void printAssignmentNodes();
+
     void createWeightedGraph();
     
     void topologicalSort();
@@ -177,19 +179,24 @@ protected:
 
 };
 
+void graphType::printAssignmentNodes()
+{
+  Assignments unsortedAssignments = Assignments::instance();
+
+  std::cout << "========================================================================" << std::endl;
+  std::cout << "Nodes: " << std::endl;
+  std::cout << std::endl;
+  int n=0;
+  for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++,n++)
+  {
+    std::cout << "Node " << n << ": " << *i << std::endl;
+  }
+}
+
 void graphType::createWeightedGraph()
 {
     Assignments unsortedAssignments = Assignments::instance();
 	
-    // DEBUG ONLY -- DISPLAY THE NODES FOR REFERENCE
-#if(DEBUG_PRINTS)
-    int n=0;
-    for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++,n++)
-    {
-      std::cout << "Node " << n << ": " << *i << std::endl;
-    }
-#endif
-
     for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++)
     {
         // each assignment is a new node
@@ -343,6 +350,7 @@ void graphType::printLongestPath()
     std::cout << std::endl;
     std::cout << "========================================================================" << std::endl;
     std::cout << "Critical Path: " << std::endl;
+    std::cout << std::endl;
     std::cout << "      INOP -> ";
     for (auto i = longestPathSeq.begin(); i != longestPathSeq.end(); i++)
     {

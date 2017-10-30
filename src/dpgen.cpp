@@ -16,9 +16,9 @@
 #include <libgen.h>
 
 // enable debug output
-#define DEBUGOUT if(1)
+// #define DEBUGOUT if(1)
 // disable debug output
-//#define DEBUGOUT if(0)
+#define DEBUGOUT if(0)
 
 static const char* indent = "    ";
 
@@ -231,6 +231,8 @@ bool critical()
   DEBUGOUT graph.printGraph();
 
   graph.longestPath();
+
+  graph.printAssignmentNodes();
   graph.printLongestPath();
   
   return true;
