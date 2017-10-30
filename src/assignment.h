@@ -40,13 +40,13 @@ public:
   }
   
   // get the assignment operator
-  const Operator& getOperator()
+  Operator& getOperator()
   {
     return mOperator;
   }
   
   // get the result variable
-   Variable& getResult()
+  Variable& getResult()
   {
     return mResult;
   }
@@ -99,6 +99,24 @@ public:
     return mSigned;
   }
   
+  std::string C_format()
+  {
+    std::string out = mResult.name() + " " + Operators::instance().getOperatorByID(Operator::REG).name() + " " + mOperand1.name();
+    if((mOperator.id()==Operator::INC)||(mOperator.id()==Operator::DEC))
+    {
+      out += mOperator.name();
+    }
+    else if(getNumArgs() > 1)
+    {
+      out += " " + getOperator().name() + " " + mOperand2.name();
+      if(getNumArgs()>2)
+      {
+        out += " " + Operators::instance().getOperatorByID(Operator::SELECT).name() + " " + mOperand3.name();
+      }
+    }
+    return out;
+  }
+
   // stream override to output the assignment in Verilog
   friend std::ostream& operator<<(std::ostream& out, Assignment& a)
   {
@@ -139,9 +157,10 @@ public:
           out << "," << a.mResult.name() << ");";
         }
     }
-    /*DEBUG*/ out << " // latency = " << a.mLatency << " ns";
+    /*DEBUG*/ out << " // " << a.C_format();
     return out;
   }
+
   // return reference to a dummy variable to fill in unused operands
   static Variable& dummyvar()
   {
