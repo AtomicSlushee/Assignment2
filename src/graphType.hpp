@@ -189,7 +189,7 @@ void graphType::printAssignmentNodes()
   int n=0;
   for (Assignments::iterator_t i = unsortedAssignments.begin(); i != unsortedAssignments.end(); i++,n++)
   {
-    std::cout << "Node " << n << ": " << *i << std::endl;
+    std::cout << "Node " << n << ": " << i->C_format() << "    // " << i->getLatency() << " ns" << std::endl;
   }
 }
 
