@@ -25,7 +25,6 @@ public:
     Vertex(std::shared_ptr<Assignment> a_ptr, int n) : nodeNum(n) 
     {
         pA = a_ptr;
-        std::cout << "Constructing Vertex node " << nodeNum << "  pA = " << pA << "  latency = " << pA->getLatency() << std::endl;
     }
     ~Vertex() { }
 
@@ -57,11 +56,7 @@ public:
 
     AdjacencyNodes getAdjacencyList() const { return adjacentNodes; }
     int getNodeNumber() const { return nodeNum; }
-    double getNodeWeight() const 
-    { 
-        std::cout << "Calling getNodeWeight " << nodeNum << "  pA = " << pA << "  latency = " << pA->getLatency() << std::endl;
-        return pA->getLatency(); 
-    }
+    double getNodeWeight() const { return pA->getLatency(); }
 
 private:
     NodeVec findInputNodes()
@@ -255,15 +250,9 @@ void graphType::longestPath()
         largestPredNodeMap[vertex->getNodeNumber()] = -1; 
     }
 
-    for (auto i = cumalativeSumMap.begin(); i != cumalativeSumMap.end(); i++)
-    {
-        std::cout << "cumSumInit " << std::get<1>(*i) << std::endl;
-    }
-
     for (auto vi = topoSortGraph.begin(); vi != topoSortGraph.end(); vi++)
     {   
         // Cycle through the input nodes to find largest contributor to cumalative latency
-        std::cout << "                     vertex " << *vi << std::endl;
         Vertex::AdjacencyNodes adjList = graph[*vi].getAdjacencyList();
         for (auto n = adjList.begin(); n != adjList.end(); n++)
         {
@@ -272,13 +261,11 @@ void graphType::longestPath()
             if ( inNode.getNodeNumber() != -1 )
             {
                 int iNodeNum = inNode.getNodeNumber();
-                std::cout << "                      inode " << iNodeNum << "   cumSum " << cumalativeSumMap[iNodeNum] << std::endl;
                 if ( (cumalativeSumMap[iNodeNum] + graph[*vi].getNodeWeight()) > cumalativeSumMap[graph[*vi].getNodeNumber()] )
                 {
                     cumalativeSumMap[graph[*vi].getNodeNumber()] = cumalativeSumMap[iNodeNum] + graph[*vi].getNodeWeight();
                     largestPredNodeMap[graph[*vi].getNodeNumber()] = iNodeNum;
                 }
-                std::cout << "                            maxInNode " << iNodeNum << "   maxCumSum "  << cumalativeSumMap[iNodeNum] << std::endl;
             }
         }
     }
