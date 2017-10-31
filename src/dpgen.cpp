@@ -228,11 +228,11 @@ bool critical()
   graph.createWeightedGraph();
   graph.topologicalSort();    
   
-  DEBUGOUT graph.printGraph();
+  //DEBUGOUT graph.printGraph();
 
   graph.longestPath();
 
-  graph.printAssignmentNodes();
+  //graph.printAssignmentNodes();
   graph.printLongestPath();
   
   return true;
@@ -315,7 +315,7 @@ int main( int argc, char* argv[] )
           {
             if( verilog( outFile, moduleName(argv[1])))
             {
-              fprintf(stdout, "converted %s to %s\n",argv[1],argv[2] );
+              //fprintf(stdout, "converted %s to %s\n",argv[1],argv[2] );
             }
             else
             {

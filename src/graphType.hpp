@@ -347,20 +347,20 @@ void graphType::printLongestPath()
         predNode = largestPredNodeMap[predNode]; 
     }
 
-    std::cout << std::endl;
-    std::cout << "========================================================================" << std::endl;
-    std::cout << "Critical Path: " << std::endl;
-    std::cout << std::endl;
-    std::cout << "      INOP -> ";
-    for (auto i = longestPathSeq.begin(); i != longestPathSeq.end(); i++)
-    {
-        std::cout << *i << " -> ";
-    }
-    std::cout << " ONOP" << std::endl;
-    std::cout << std::endl;
-    std::cout << "      Latency = " << maxSum << " ns" << std::endl;
-    std::cout << "------------------------------------------------------------------------" << std::endl;
-    std::cout << std::endl;
+//    std::cout << std::endl;
+//    std::cout << "========================================================================" << std::endl;
+//    std::cout << "Critical Path: " << std::endl;
+//    std::cout << std::endl;
+//    std::cout << "      INOP -> ";
+//    for (auto i = longestPathSeq.begin(); i != longestPathSeq.end(); i++)
+//    {
+//        std::cout << *i << " -> ";
+//    }
+//    std::cout << " ONOP" << std::endl;
+//    std::cout << std::endl;
+    std::cout << "Critical Path : " << maxSum << " ns" << std::endl;
+//    std::cout << "------------------------------------------------------------------------" << std::endl;
+//    std::cout << std::endl;
 }
 
 graphType::graphType()
