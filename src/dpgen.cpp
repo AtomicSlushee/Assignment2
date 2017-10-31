@@ -247,7 +247,7 @@ bool verilog( std::ofstream& out, std::string name )
   out << "`timescale 1ns / 1ps" << std::endl;
 
   // declare module
-  out << "module " << name << "(";
+  out << "module m_" << name << "(";
   for (Variables::iterator_t i = Variables::instance().begin(); i != Variables::instance().end(); i++)
   {
     if( Variables::instance().variable(i).ioClass() == IOClass::INPUT )
