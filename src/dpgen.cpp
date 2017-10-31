@@ -244,7 +244,7 @@ bool verilog( std::ofstream& out, std::string name )
   bool comma = false;
 
   // timescale
-  out << "'timescale 1ns / 1ps" << std::endl;
+  out << "`timescale 1ns / 1ps" << std::endl;
 
   // declare module
   out << "module " << name << "(";
