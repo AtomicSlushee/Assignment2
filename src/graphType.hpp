@@ -6,6 +6,7 @@
 #include <list>
 #include <vector>
 #include <memory>
+#include <iterator>
 
 #include "assignment.h"
 
@@ -148,6 +149,10 @@ public:
     
     void Reg2RegLongestPath();
     
+    void walkNext(int node, double sum, double& max);
+
+    void criticalPath();
+
     void longestPath();
     
     void printLongestPath();
@@ -248,8 +253,59 @@ void graphType::topologicalSort()
     }
 }
 
+void graphType::walkNext(int node, double sum, double& max)
+{
+//  std::cout << "<" << node << ">";
+
+  // need a way to get the assignment for a given node ID
+  auto asgn = [&](int id){auto x = Assignments::instance().begin(); while(id--)x=std::next(x); return x;};
+  Assignment& a = *asgn(node);
+  if( a.getOperator().id() == Operator::REG )
+  {
+    // stop and evaluate at this point
+    if( sum > max ) max = sum;
+    // reset and keep walking
+    sum = graph[node].getNodeWeight();
+  }
+  else
+  {
+    sum += graph[node].getNodeWeight();
+  }
+  Vertex::AdjacencyNodes adjList = graph[node].getAdjacencyList();
+  for (auto n = adjList.begin(); n != adjList.end(); n++)
+  {
+    Vertex out = std::get<1>(*n);
+    auto o = out.getNodeNumber();
+    if( o != -1 )
+    {
+      walkNext( o, sum, max );
+    }
+    else
+    {
+      // stop and evaluate at this point
+      if( sum > max ) max = sum;
+    }
+  }
+}
+
+void graphType::criticalPath()
+{
+  double sum = 0.0;
+  double max = 0.0;
+  int node = 0;
+
+  for (auto vi = topoSortGraph.begin(); vi != topoSortGraph.end(); vi++)
+  {
+    walkNext(*vi,sum,max);
+  }
+
+  std::cout << std::endl << "Critical Path: " << max << " ns" << std::endl;
+}
+
 void graphType::longestPath()
 {
+    criticalPath();
+
     // Initialize cumalative sum map with vertices' own weights
     for (auto vertex = graph.begin(); vertex != graph.end(); vertex++)
     {
@@ -358,7 +414,7 @@ void graphType::printLongestPath()
 //    }
 //    std::cout << " ONOP" << std::endl;
 //    std::cout << std::endl;
-    std::cout << "Critical Path : " << maxSum << " ns" << std::endl;
+//    std::cout << "Critical Path : " << maxSum << " ns" << std::endl;
 //    std::cout << "------------------------------------------------------------------------" << std::endl;
 //    std::cout << std::endl;
 }
