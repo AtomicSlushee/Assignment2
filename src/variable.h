@@ -44,7 +44,11 @@ public:
   // stream overload to output the variable declaration in Verilog
   friend std::ostream& operator<<(std::ostream& out, Variable& a)
   {
-    out << a.mIOClass.name();
+    // kludge fix for register
+    if( a.mIOClass.id() == IOClass::REGISTER )
+      out << "reg";
+    else
+      out << a.mIOClass.name();
     if (a.width() > 1)
       out << " [" << a.width()-1 << ":0]";
     out << " " << a.name() << ";";
